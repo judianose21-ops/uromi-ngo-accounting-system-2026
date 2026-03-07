@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<h1>Dashboard</h1>
+
+<div class="cards">
+
+<div class="card">
+<h3>Donations</h3>
+<p id="donations">0</p>
+</div>
+
+<div class="card">
+<h3>Expenses</h3>
+<p id="expenses">0</p>
+</div>
+
+<div class="card">
+<h3>Balance</h3>
+<p id="balance">0</p>
+</div>
+
+</div>
+
+<canvas id="financeChart"></canvas>
+
+<script src="/static/app.js"></script>
+
+{% endblock %}

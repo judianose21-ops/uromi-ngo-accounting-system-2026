@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<h1>Expenses</h1>
+
+<form id="expenseForm">
+
+<input type="date" id="exp_date">
+<input type="text" id="exp_desc" placeholder="Description">
+<input type="number" id="exp_amount" placeholder="Amount">
+
+<button>Add Expense</button>
+
+</form>
+
+{% endblock %}

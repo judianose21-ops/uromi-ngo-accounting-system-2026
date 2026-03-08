@@ -1,21 +1,34 @@
 import sqlite3
+from fastapi import APIRouter
+from pydantic import BaseModel
+from passlib.context import CryptContext
 
-conn = sqlite3.connect("ngo.db")
-cur = conn.cursor()
+router = APIRouter()
 
-cur.execute("""
-""")
-cur.execute(
-"SELECT password,role FROM users WHERE username=?",
-(data.username,)
-)
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-user = cur.fetchone()
 
-if user and bcrypt.verify(data.password,user[0]):
+class LoginData(BaseModel):
+    username: str
+    password: str
 
-    return {"status":"success","role":user[1]}
-conn.commit()
-conn.close()
 
-print("Role column added")
+@router.post("/login")
+def login(data: LoginData):
+
+    conn = sqlite3.connect("ngo.db")
+    cur = conn.cursor()
+
+    cur.execute(
+        "SELECT password, role FROM users WHERE username=?",
+        (data.username,)
+    )
+
+    user = cur.fetchone()
+
+    conn.close()
+
+    if user and pwd_context.verify(data.password, user[0]):
+        return {"status": "success", "role": user[1]}
+
+    return {"status": "error", "message": "Invalid username or password"}

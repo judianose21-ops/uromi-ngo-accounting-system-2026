@@ -1,17 +1,50 @@
-{% extends "layout.html" %}
+<!DOCTYPE html>
 
-{% block content %}
+<html>
 
-<h1>Expenses</h1>
+<head>
+<title>Expenses</title>
+</head>
 
-<form id="expenseForm">
+<body>
 
-<input type="date" id="exp_date">
-<input type="text" id="exp_desc" placeholder="Description">
-<input type="number" id="exp_amount" placeholder="Amount">
+<h2>Expense Entry</h2>
 
-<button>Add Expense</button>
+<input id="code" placeholder="Account Code"><br><br> <input id="name" placeholder="Account Name"><br><br> <input id="detail" placeholder="Detail"><br><br> <input id="amount" type="number" placeholder="Amount"><br><br> <input id="date" type="date"><br><br>
 
-</form>
+<button onclick="saveExpense()">Save Expense</button>
 
-{% endblock %}
+<script>
+
+async function saveExpense(){
+
+let data = {
+
+account_code:document.getElementById("code").value,
+account_name:document.getElementById("name").value,
+detail:document.getElementById("detail").value,
+amount:document.getElementById("amount").value,
+date:document.getElementById("date").value
+
+}
+
+await fetch("/save-expense",{
+
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify(data)
+
+})
+
+alert("Expense saved")
+
+location.reload()
+
+}
+
+</script>
+
+</body>
+</html>

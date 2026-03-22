@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}
+    {% if project %}Edit Project{% else %}Add New Project{% endif %} - UROMI NGO Accounting
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        {% if project %}✏️ Edit Project{% else %}➕ Add New Project{% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if error %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        {{ error }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endif %}
+
+                    <form method="post">
+                        <div class="mb-3">
+                            <label for="project_name" class="form-label">Project Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="project_name" name="project_name" required
+                                   value="{{ project.project_name if project else (form_data.project_name if form_data else '') }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="donor" class="form-label">Donor / Funder</label>
+                            <input type="text" class="form-control" id="donor" name="donor"
+                                   value="{{ project.donor if project else (form_data.donor if form_data else '') }}">
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6 mb-3">
+                                <label for="start_date" class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="start_date" name="start_date"
+                                       value="{{ project.start_date if project else (form_data.start_date if form_data else '') }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="end_date" class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="end_date" name="end_date"
+                                       value="{{ project.end_date if project else (form_data.end_date if form_data else '') }}">
+                            </div>
+                        </div>
+
+                        <div class="mt-4 d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                {% if project %}Update Project{% else %}Create Project{% endif %}
+                            </button>
+                            <a href="/projects" class="btn btn-outline-secondary btn-lg">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

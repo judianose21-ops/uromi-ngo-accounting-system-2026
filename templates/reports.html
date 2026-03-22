@@ -1,11 +1,26 @@
-{% extends "layout.html" %}
+<!-- templates/reports.html -->
+{% extends "base.html" %}
 
 {% block content %}
-
-<h1>Financial Reports</h1>
-
-<button onclick="window.location='/export-excel'">Download Excel</button>
-
-<button onclick="window.location='/export-pdf'">Download PDF</button>
-
+<h1>Reports</h1>
+<div class="row mt-3">
+    <div class="col-md-4">
+        <div class="card text-center p-3">
+            <h4>Income</h4>
+            <p class="display-6">${{ income }}</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center p-3">
+            <h4>Expenses</h4>
+            <p class="display-6">${{ expenses }}</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center p-3">
+            <h4>Balance</h4>
+            <p class="display-6">${{ balance }}</p>
+        </div>
+    </div>
+</div>
 {% endblock %}

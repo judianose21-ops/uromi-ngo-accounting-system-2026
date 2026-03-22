@@ -1,72 +1,57 @@
 import sqlite3
+from contextlib import contextmanager
 
+DB_PATH = "ngo.db"
 
-def get_connection():
-    return sqlite3.connect("ngo.db")
+# Context manager to automatically close connection
+@contextmanager
+def get_db():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row  # allows dict-like access
+    try:
+        yield conn
+    finally:
+        conn.close()
 
-
-def initialize():
-
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    # USERS TABLE
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT,
-        password TEXT,
-        role TEXT
-    )
-    """)
-
-    cursor.execute("""
-    INSERT OR IGNORE INTO users (id, username, password, role)
-    VALUES (1, 'admin', 'admin123', 'admin')
-    """)
-
-    # DONORS
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS donors (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT,
-        email TEXT,
-        phone TEXT
-    )
-    """)
-
-    # PROJECTS
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS projects (
-       id INTEGER PRIMARY KEY AUTOINCREMENT,
-       project_name TEXT,
-       donor TEXT,
-       budget REAL
-    )
-    """)
-
-    # CHART OF ACCOUNTS
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS chart_of_accounts (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        account_name TEXT,
-        account_type TEXT,
-        description TEXT
-    )
-    """)
-
-    # TRANSACTIONS
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS transactions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        date TEXT,
-        description TEXT,
-        debit_account TEXT,
-        credit_account TEXT,
-        amount REAL,
-        project_id TEXT
-    )
-    """)
-
-    conn.commit()
-    conn.close()
+# Optional: function to initialize tables if they don't exist
+def init_db():
+    with get_db() as conn:
+        cur = conn.cursor()
+        # donors table
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS donors (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT,
+            phone TEXT
+        )
+        """)
+        # accounts table
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS accounts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            account_name TEXT NOT NULL,
+            balance REAL DEFAULT 0
+        )
+        """)
+        # transactions table
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS transactions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date TEXT NOT NULL,
+            account_name TEXT NOT NULL,
+            type TEXT NOT NULL,
+            amount REAL NOT NULL,
+            description TEXT
+        )
+        """)
+        # projects table
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS projects (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            sector TEXT NOT NULL,
+            budget REAL DEFAULT 0
+        )
+        """)
+        conn.commit()

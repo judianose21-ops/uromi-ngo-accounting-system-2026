@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% block title %}Transactions - UROMI NGO Accounting{% endblock %}
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h2 class="mb-0">📊 Transaction List</h2>
+        <div class="d-flex gap-2">
+            <a href="/add-transaction" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> Add Transaction
+            </a>
+            <a href="/export" class="btn btn-outline-secondary">
+                <i class="bi bi-download"></i> Export CSV
+            </a>
+        </div>
+    </div>
+
+    {% if transactions|length == 0 %}
+        <div class="alert alert-info text-center py-4">
+            No transactions recorded yet.
+        </div>
+    {% else %}
+    <!-- SEARCH + SUMMARY -->
+    <div class="row mb-3 align-items-center">
+        <div class="col-md-6">
+            <input type="text" class="form-control" id="searchInput"
+                   placeholder="🔍 Search by description, vendor, PV, account...">
+        </div>
+        <div class="col-md-6 text-md-end mt-2 mt-md-0">
+            <strong>Total Gross: ₦<span id="totalGross">0.00</span></strong>
+              |  
+            <strong>Net: ₦<span id="totalNet">0.00</span></strong>
+        </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle mb-0 small" id="transactionTable">
+                    <thead class="table-dark text-nowrap">
+                        <tr>
+                            <th>Date</th>
+                            <th>PV No.</th>
+                            <th>Vendor</th>
+                            <th>Description</th>
+                            <th>Account</th>
+                            <th>Type</th>
+                            <th class="text-end">Gross</th>
+                            <th class="text-end">WHT</th>
+                            <th class="text-end">Net</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in transactions %}
+                        <tr data-type="{{ t.type }}">
+                            <td class="text-nowrap">{{ t.date }}</td>
+                            
+                            <!-- PV NUMBER - NOW LINKS TO HTML VOUCHER (print-friendly) -->
+                            <td class="text-nowrap">
+                                <a href="/voucher/html/{{ t.id }}"
+                                   target="_blank" rel="noopener noreferrer"
+                                   class="text-primary fw-bold text-decoration-underline"
+                                   title="View & Print Payment Voucher (HTML)">
+                                    {{ t.pv_number or 'PV-' ~ t.id|string }}
+                                </a>
+                            </td>
+
+                            <!-- VENDOR + TIN -->
+                            <td>
+                                {{ t.vendor_name or '—' }}
+                                {% if t.vendor_tin %}
+                                    <br><small class="text-muted">TIN: {{ t.vendor_tin }}</small>
+                                {% endif %}
+                            </td>
+
+                            <!-- DESCRIPTION -->
+                            <td>{{ t.description or '—' }}</td>
+
+                            <!-- ACCOUNT (main + sub) -->
+                            <td>
+                                {{ t.main_account or '—' }}
+                                {% if t.main_account_code or t.sub_account %}
+                                    <br><small class="text-muted">
+                                        {{ t.main_account_code or '' }}
+                                        {% if t.sub_account_code %} • {{ t.sub_account_code }}{% endif %}
+                                    </small>
+                                {% endif %}
+                            </td>
+
+                            <!-- TYPE -->
+                            <td>
+                                <span class="badge rounded-pill {{ 'bg-success' if t.type == 'Income' else 'bg-danger' }}">
+                                    {{ t.type }}
+                                </span>
+                            </td>
+
+                            <!-- AMOUNTS -->
+                            <td class="text-end fw-bold amount-gross">
+                                {{ t.amount|format_currency }}
+                            </td>
+                            <td class="text-end amount-wht text-danger">
+                                {{ (t.WHT_amount or 0)|format_currency }}
+                            </td>
+                            <td class="text-end fw-bold amount-net">
+                                {{ (t.net_amount or (t.amount - (t.WHT_amount or 0)))|format_currency }}
+                            </td>
+
+                            <!-- ACTIONS -->
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="/edit-transaction/{{ t.id }}" class="btn btn-warning" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form action="/delete-transaction/{{ t.id }}" method="post"
+                                          style="display:inline;" onsubmit="return confirm('Delete this transaction?');">
+                                        <button type="submit" class="btn btn-danger" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- JavaScript: Search + Dynamic Totals -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('searchInput');
+    const rows = document.querySelectorAll('#transactionTable tbody tr');
+
+    function calculateTotals() {
+        let gross = 0, net = 0;
+        document.querySelectorAll('#transactionTable tbody tr:not([style*="display: none"])').forEach(row => {
+            const g = parseFloat(row.querySelector('.amount-gross')?.innerText.replace(/[^0-9.-]+/g, '')) || 0;
+            const n = parseFloat(row.querySelector('.amount-net')?.innerText.replace(/[^0-9.-]+/g, '')) || 0;
+            gross += g;
+            net += n;
+        });
+        document.getElementById('totalGross').innerText = gross.toLocaleString('en-NG', {
+            minimumFractionDigits: 2, maximumFractionDigits: 2
+        });
+        document.getElementById('totalNet').innerText = net.toLocaleString('en-NG', {
+            minimumFractionDigits: 2, maximumFractionDigits: 2
+        });
+    }
+
+    searchInput.addEventListener('input', () => {
+        const filter = searchInput.value.toLowerCase().trim();
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(filter) ? '' : 'none';
+        });
+        calculateTotals();
+    });
+
+    calculateTotals();
+});
+</script>
+{% endblock %}

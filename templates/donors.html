@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Donors</h2>
+<table border="1" cellpadding="5">
+    <tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th></tr>
+    {% for donor in donors %}
+    <tr>
+        <td>{{ donor.id }}</td>
+        <td>{{ donor.name }}</td>
+        <td>{{ donor.email }}</td>
+        <td>{{ donor.phone }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+{% block title %}Add / Edit Transaction - UROMI NGO Accounting{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        {% if is_edit %}Edit Transaction{% else %}Add New Transaction{% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if error %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        {{ error }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endif %}
+
+                    <form action="{% if is_edit %}/edit-transaction/{{ edit_id }}{% else %}/add-transaction{% endif %}"
+                          method="post" id="transactionForm">
+                        <div class="row g-3">
+
+                            <!-- Date -->
+                            <div class="col-md-6">
+                                <label for="date" class="form-label">Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="date" name="date" required
+                                       value="{{ form_data.date or transaction.date or '' }}">
+                            </div>
+
+                            <!-- PV Number -->
+                            <div class="col-md-6">
+                                <label for="pv_number" class="form-label">PV Number</label>
+                                <input type="text" class="form-control" id="pv_number" name="pv_number"
+                                       placeholder="Payment Voucher Number"
+                                       value="{{ form_data.pv_number or transaction.pv_number or '' }}">
+                            </div>
+
+                            <!-- Description -->
+                            <div class="col-12">
+                                <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="description" name="description" required
+                                       placeholder="Transaction Description"
+                                       value="{{ form_data.description or transaction.description or '' }}">
+                            </div>
+
+                            <!-- Type -->
+                            <div class="col-md-6">
+                                <label for="type" class="form-label">Transaction Type <span class="text-danger">*</span></label>
+                                <select class="form-select" id="type" name="type" required>
+                                    <option value="">Select Type</option>
+                                    <option value="Income" {% if (form_data.type or transaction.type) == 'Income' %}selected{% endif %}>Income</option>
+                                    <option value="Expense" {% if (form_data.type or transaction.type) == 'Expense' %}selected{% endif %}>Expense</option>
+                                </select>
+                            </div>
+
+                            <!-- Gross Amount -->
+                            <div class="col-md-6">
+                                <label for="gross_amount" class="form-label">Gross Amount <span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" min="0.01" class="form-control" id="gross_amount" name="gross_amount" required
+                                       placeholder="Enter Gross Amount"
+                                       value="{{ form_data.gross_amount or transaction.amount or '' }}">
+                            </div>
+
+                            <!-- Month -->
+                            <div class="col-md-6">
+                                <label for="month" class="form-label">Month</label>
+                                <select class="form-select" id="month" name="month">
+                                    <option value="">Auto from Date</option>
+                                    {% for m in range(1,13) %}
+                                    <option value="{{ m }}" {% if (form_data.month or transaction.month) == m %}selected{% endif %}>
+                                        {{ ["January","February","March","April","May","June","July","August","September","October","November","December"][m-1] }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Project -->
+                            <div class="col-md-6">
+                                <label for="project" class="form-label">Project</label>
+                                <select class="form-select" id="project" name="project">
+                                    <option value="">— Select Project (optional) —</option>
+                                    {% for p in projects %}
+                                    <option value="{{ p.project_name }}"
+                                            {% if (form_data.project or transaction.project) == p.project_name %}selected{% endif %}>
+                                        {{ p.project_name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Vendor TIN -->
+                            <div class="col-md-6">
+                                <label for="vendor_tin" class="form-label">Vendor TIN (Tax Identification Number)</label>
+                                <input type="text" class="form-control" id="vendor_tin" name="vendor_tin"
+                                       placeholder="Enter Vendor TIN (optional)"
+                                       value="{{ form_data.vendor_tin or transaction.vendor_tin or '' }}">
+                            </div>
+
+                            <!-- Vendor Account Details -->
+                            <div class="col-md-6">
+                                <label for="vendor_account_details" class="form-label">Vendor Account Details</label>
+                                <input type="text" class="form-control" id="vendor_account_details" name="vendor_account_details"
+                                       placeholder="e.g. GTBank - 0123456789 (optional)"
+                                       value="{{ form_data.vendor_account_details or transaction.vendor_account_details or '' }}">
+                            </div>
+
+                            <!-- Main Account -->
+                            <div class="col-md-6">
+                                <label for="main_account_code" class="form-label">Main Account <span class="text-danger">*</span></label>
+                                <select class="form-select" id="main_account_code" name="main_account_code" required>
+                                    <option value="">Select Main Account</option>
+                                    {% for acc in main_accounts %}
+                                    <option value="{{ acc.account_code }}"
+                                            {% if (form_data.main_account_code or transaction.main_account_code) == acc.account_code %}selected{% endif %}>
+                                        {{ acc.account_code }} — {{ acc.account_name }} ({{ acc.account_type }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Sub Account -->
+                            <div class="col-md-6">
+                                <label for="sub_account_code" class="form-label">Sub Account (optional)</label>
+                                <select class="form-select" id="sub_account_code" name="sub_account_code">
+                                    <option value="">— None / Direct to Main —</option>
+                                    {% for sub in subaccounts %}
+                                    <option value="{{ sub.sub_account_code }}"
+                                            data-parent="{{ sub.parent_account_code }}"
+                                            {% if (form_data.sub_account_code or transaction.sub_account_code) == sub.sub_account_code %}selected{% endif %}>
+                                        {{ sub.sub_account_code }} — {{ sub.sub_account_name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Withholding Tax (WHT) -->
+                            <div class="col-12 mt-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="wht_applied" name="wht_applied"
+                                           {% if form_data.wht_applied == 'on' or transaction.wht_applied == 1 %}checked{% endif %}>
+                                    <label class="form-check-label" for="wht_applied">
+                                        Deduct Withholding Tax (WHT) from Gross Amount
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- WHT Fields -->
+                            <div id="wht_fields" class="col-12 mt-3" style="display: {% if form_data.wht_applied == 'on' or transaction.wht_applied == 1 %}block{% else %}none{% endif %};">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="wht_rate" class="form-label">WHT Rate (%)</label>
+                                        <input type="number" step="0.01" min="0" max="100" class="form-control" id="wht_rate" name="wht_rate"
+                                               value="{{ form_data.wht_rate or (transaction.wht_rate * 100)|round(2) if transaction.wht_rate else '0' }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="wht_amount_display" class="form-label">WHT Amount (₦) - calculated</label>
+                                        <input type="text" class="form-control bg-light" id="wht_amount_display" readonly
+                                               value="{{ form_data.wht_amount or transaction.wht_amount|format_currency if transaction.wht_amount else '₦0.00' }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="net_amount_display" class="form-label">Net Amount to Pay (₦)</label>
+                                        <input type="text" class="form-control bg-light fw-bold" id="net_amount_display" readonly
+                                               value="{{ form_data.net_amount or transaction.net_amount|format_currency if transaction.net_amount else '₦0.00' }}">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Submit -->
+                            <div class="col-12 mt-5">
+                                <button type="submit" class="btn btn-primary w-100 btn-lg">
+                                    {% if is_edit %}Save Changes{% else %}Save Transaction{% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // WHT logic
+    const whtCheckbox = document.getElementById('wht_applied');
+    const whtFields = document.getElementById('wht_fields');
+    const grossInput = document.querySelector('input[name="gross_amount"]');
+    const whtRateInput = document.getElementById('wht_rate');
+    const whtDisplay = document.getElementById('wht_amount_display');
+    const netDisplay = document.getElementById('net_amount_display');
+
+    function toggleWht() {
+        whtFields.style.display = whtCheckbox.checked ? 'block' : 'none';
+        calculateAmounts();
+    }
+
+    function calculateAmounts() {
+        const gross = parseFloat(grossInput.value) || 0;
+        let wht = 0;
+        let net = gross;
+
+        if (whtCheckbox.checked) {
+            const rate = parseFloat(whtRateInput.value) || 0;
+            wht = gross * (rate / 100);
+            net = gross - wht;
+        }
+
+        whtDisplay.value = '₦' + wht.toLocaleString('en-NG', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        netDisplay.value = '₦' + net.toLocaleString('en-NG', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    if (whtCheckbox) whtCheckbox.addEventListener('change', toggleWht);
+    if (grossInput) grossInput.addEventListener('input', calculateAmounts);
+    if (whtRateInput) whtRateInput.addEventListener('input', calculateAmounts);
+
+    // Initial state
+    if (whtCheckbox) toggleWht();
+
+    // Sub-account filtering
+    const mainSelect = document.getElementById('main_account_code');
+    const subSelect = document.getElementById('sub_account_code');
+    if (mainSelect && subSelect) {
+        const allSubOptions = Array.from(subSelect.options).slice(1);
+        mainSelect.addEventListener('change', function() {
+            const selectedCode = this.value.trim();
+            subSelect.innerHTML = '<option value="">— None / Direct to Main —</option>';
+            allSubOptions.forEach(opt => {
+                if (!selectedCode || opt.dataset.parent === selectedCode) {
+                    subSelect.appendChild(opt.cloneNode(true));
+                }
+            });
+            subSelect.value = '';
+        });
+        if (mainSelect.value) mainSelect.dispatchEvent(new Event('change'));
+    }
+});
+</script>
+{% endblock %}

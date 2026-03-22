@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+{% block title %}Chart of Accounts - NGO Finance{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- MESSAGES -->
+    {% if request.query_params.success %}
+    <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+        {{ request.query_params.success | replace("+", " ") }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    {% if request.query_params.error %}
+    <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        {{ request.query_params.error | replace("+", " ") }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    {% if error %}
+    <div class="alert alert-danger alert-dismissible fade show shadow-sm">
+        {{ error }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <h2 class="fw-bold mb-1">Chart of Accounts</h2>
+            <small class="text-muted">Define and manage your organization's financial categories</small>
+        </div>
+        <small class="text-muted">Total main accounts: <strong>{{ main_accounts|length }}</strong></small>
+    </div>
+
+    <!-- ADD FORMS -->
+    <div class="row g-4 mb-5">
+        <!-- ADD MAIN ACCOUNT -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-lg rounded-4 h-100">
+                <div class="card-header bg-primary text-white rounded-top-4">
+                    <h5 class="mb-0">➕ Add Main Account</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" action="/add-account">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Account Code <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-lg" name="account_code"
+                                   value="{{ form_data.account_code|default('') }}" placeholder="e.g. 1000" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Account Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-lg" name="account_name"
+                                   value="{{ form_data.account_name|default('') }}" placeholder="e.g. Cash in Hand" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Account Type <span class="text-danger">*</span></label>
+                            <select class="form-select form-select-lg" name="account_type" required>
+                                <option value="">— Select Type —</option>
+                                <option value="Asset"    {% if form_data.account_type == 'Asset'    %}selected{% endif %}>Asset</option>
+                                <option value="Liability"{% if form_data.account_type == 'Liability' %}selected{% endif %}>Liability</option>
+                                <option value="Equity"   {% if form_data.account_type == 'Equity'   %}selected{% endif %}>Equity</option>
+                                <option value="Income"   {% if form_data.account_type == 'Income'   %}selected{% endif %}>Income</option>
+                                <option value="Expense"  {% if form_data.account_type == 'Expense'  %}selected{% endif %}>Expense</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Description</label>
+                            <input type="text" class="form-control" name="description"
+                                   value="{{ form_data.description|default('') }}" placeholder="Optional note">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 py-3 fw-semibold">
+                            Save Main Account
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ADD SUB ACCOUNT -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-lg rounded-4 h-100">
+                <div class="card-header bg-success text-white rounded-top-4">
+                    <h5 class="mb-0">➕ Add Sub Account</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" action="/add-subaccount">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Parent Account <span class="text-danger">*</span></label>
+                            <select class="form-select form-select-lg" name="parent_account" required>
+                                <option value="">— Select Parent Account —</option>
+                                {% for acc in main_accounts %}
+                                <option value="{{ acc.account_code }}">
+                                    {{ acc.account_name }} ({{ acc.account_code }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Sub Account Code <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-lg" name="sub_account_code"
+                                   value="{{ form_data.sub_account_code|default('') }}" placeholder="e.g. 1000-01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Sub Account Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-lg" name="sub_account_name"
+                                   value="{{ form_data.sub_account_name|default('') }}" placeholder="e.g. Petty Cash" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Description</label>
+                            <input type="text" class="form-control" name="description"
+                                   value="{{ form_data.description|default('') }}" placeholder="Optional">
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 py-3 fw-semibold">
+                            Save Sub Account
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACCOUNTS TABLE -->
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-3">
+            <h5 class="mb-0">Account Structure</h5>
+            <small>Total main accounts: {{ main_accounts|length }}</small>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Code</th>
+                            <th>Name</th>
+                            <th>Type / Level</th>
+                            <th>Description</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for acc in main_accounts %}
+                        <!-- MAIN ACCOUNT -->
+                        <tr class="table-active">
+                            <td class="fw-bold">{{ acc.account_code }}</td>
+                            <td class="fw-semibold">{{ acc.account_name }}</td>
+                            <td><span class="badge bg-primary fs-6">{{ acc.account_type }}</span></td>
+                            <td>{{ acc.description or '<span class="text-muted">—</span>' }}</td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="#" class="btn btn-outline-secondary" title="Edit (coming soon)">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form action="/delete-main-account/{{ acc.account_code }}" method="post"
+                                          style="display:inline;" class="ms-1"
+                                          onsubmit="return confirm('Delete main account «{{ acc.account_name }}» ({{ acc.account_code }})?\nThis cannot be undone.');">
+                                        <button type="submit" class="btn btn-outline-danger" aria-label="Delete main account">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- SUB-ACCOUNTS -->
+                        {% set has_sub = namespace(found=false) %}
+                        {% for sub in subaccounts if sub.parent_account_code == acc.account_code %}
+                            {% set has_sub.found = true %}
+                            <tr class="sub-row">
+                                <td>{{ sub.sub_account_code }}</td>
+                                <td class="ps-4 text-muted">↳ {{ sub.sub_account_name }}</td>
+                                <td><span class="badge bg-secondary fs-6">Sub</span></td>
+                                <td>{{ sub.description or '<span class="text-muted">—</span>' }}</td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="#" class="btn btn-outline-secondary" title="Edit (coming soon)">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form action="/delete-subaccount/{{ sub.sub_account_code }}" method="post"
+                                              style="display:inline;" class="ms-1"
+                                              onsubmit="return confirm('Delete sub-account «{{ sub.sub_account_name }}»?');">
+                                            <button type="submit" class="btn btn-outline-danger" aria-label="Delete sub-account">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+
+                        {% if not has_sub.found %}
+                        <tr class="text-muted">
+                            <td colspan="5" class="text-center py-2 fst-italic">
+                                No sub-accounts under this main account
+                            </td>
+                        </tr>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if main_accounts|length == 0 %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted fst-italic">
+                            No accounts created yet. Add your first main account above.
+                        </td>
+                    </tr>
+                    {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+    .sub-row {
+        background-color: rgba(0,0,0,0.02);
+    }
+    .sub-row:hover {
+        background-color: rgba(0,123,255,0.08) !important;
+    }
+    tr.table-active:hover {
+        background-color: rgba(0,0,0,0.05) !important;
+    }
+</style>
+{% endblock %}

@@ -1,12 +1,16 @@
 import sqlite3
 
 conn = sqlite3.connect("ngo.db")
-cur = conn.cursor()
+c = conn.cursor()
 
-cur.execute("PRAGMA table_info(transactions)")
-columns = cur.fetchall()
+# show tables
+c.execute("SELECT name FROM sqlite_master WHERE type='table'")
+print("Tables:", c.fetchall())
 
-for col in columns:
+# show transactions structure
+c.execute("PRAGMA table_info(transactions)")
+print("Transactions Columns:")
+for col in c.fetchall():
     print(col)
 
 conn.close()

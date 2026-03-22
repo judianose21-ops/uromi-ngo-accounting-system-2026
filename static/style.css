@@ -1,46 +1,154 @@
-html
-<!DOCTYPE html>
-<html>
+/* =========================
+   GLOBAL STYLES
+========================= */
+body {
+    background-color: #f4f6f9;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+}
 
-<head>
-    <title>NGO Accounting System</title>
+/* =========================
+   SIDEBAR
+========================= */
+.sidebar {
+    width: 250px;
+    min-height: 100vh;
+    background-color: #343a40;
+    color: #fff;
+    padding: 20px 15px;
+}
 
-    <link rel="icon" href="/static/favicon.ico">
+.sidebar h3,
+.sidebar small {
+    color: #fff;
+}
 
-    <link rel="stylesheet" href="/static/style.css">
+.sidebar .nav-link,
+.sidebar .btn {
+    color: #fff;
+    transition: all 0.2s ease;
+}
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+.sidebar .nav-link:hover,
+.sidebar .btn:hover {
+    background-color: #495057;
+    border-radius: 6px;
+    padding-left: 10px;
+}
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
+.sidebar .nav-link.active {
+    background-color: #0d6efd;
+    border-radius: 6px;
+}
 
-<body>
+/* =========================
+   CARDS
+========================= */
+.card {
+    border-radius: 0.7rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border: none;
+}
 
-<div class="d-flex">
+/* =========================
+   TABLES
+========================= */
+.table {
+    margin-bottom: 0;
+}
 
-    <!-- Sidebar -->
-    <div class="bg-dark text-white p-3" style="width:230px;height:100vh">
-        <h4>NGO Finance</h4>
-        <hr>
+.table th {
+    font-weight: 600;
+}
 
-        <a class="text-white d-block mb-2" href="/">Dashboard</a>
-        <a class="text-white d-block mb-2" href="/donations">Donations</a>
-        <a class="text-white d-block mb-2" href="/expenses">Expenses</a>
-        <a class="text-white d-block mb-2" href="/ledger-page">Ledger</a>
-        <a class="text-white d-block mb-2" href="/projects">Projects</a>
-        <a class="text-white d-block mb-2" href="/budgets">Budgets</a>
-        <a class="text-white d-block mb-2" href="/reports">Reports</a>
-    </div>
+/* 🔥 IMPORTANT FOR PDF + VOUCHER */
+table, tr, td {
+    page-break-inside: avoid;
+}
 
-    <!-- Main Content -->
-    <div class="p-4 flex-grow-1">
+td {
+    word-wrap: break-word;
+}
 
-        {% block content %}
-        {% endblock %}
+/* =========================
+   CHART / CANVAS
+========================= */
+canvas {
+    background-color: #fff;
+    border-radius: 0.5rem;
+    padding: 10px;
+}
 
-    </div>
+/* =========================
+   MODAL IMPROVEMENTS
+========================= */
+.modal-content {
+    border-radius: 10px;
+}
 
-</div>
+.modal-header {
+    border-bottom: 1px solid #eee;
+}
 
-</body>
-</html>
+.modal-footer {
+    border-top: 1px solid #eee;
+}
+
+/* =========================
+   PRINT STYLES (VOUCHER)
+========================= */
+@media print {
+
+    /* Reset background */
+    body {
+        background: #fff;
+        margin: 0;
+    }
+
+    /* Hide everything */
+    body * {
+        visibility: hidden;
+    }
+
+    /* Show only voucher modal */
+    #voucherModal,
+    #voucherModal * {
+        visibility: visible;
+    }
+
+    #voucherModal {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+
+    /* Expand modal to full page */
+    .modal-dialog {
+        max-width: 100%;
+        margin: 0;
+    }
+
+    /* Remove modal styling constraints */
+    .modal-content {
+        border: none;
+        box-shadow: none;
+    }
+
+    /* Hide buttons */
+    .no-print,
+    .modal-header .btn-close,
+    .modal-footer {
+        display: none !important;
+    }
+
+    /* 🔥 Ensure voucher fits one page */
+    table, tr, td {
+        page-break-inside: avoid;
+    }
+
+    /* Slight spacing reduction for print */
+    th, td {
+        padding: 5px !important;
+    }
+}

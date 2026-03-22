@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}
+    {% if is_edit %}Edit Vendor{% else %}Add New Vendor{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        {% if is_edit %}
+                            ✏️ Edit Vendor
+                        {% else %}
+                            ➕ Add New Vendor
+                        {% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="">
+                        <div class="row g-3">
+                            <!-- Vendor Name -->
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Vendor Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="name" 
+                                       value="{{ vendor.name|default('') }}" required 
+                                       placeholder="e.g. ABC Supplies Ltd">
+                            </div>
+
+                            <!-- TIN -->
+                            <div class="col-md-6">
+                                <label class="form-label">TIN (Tax Identification Number)</label>
+                                <input type="text" class="form-control" name="tin" 
+                                       value="{{ vendor.tin|default('') }}" 
+                                       placeholder="e.g. 1234567890">
+                            </div>
+
+                            <!-- Phone -->
+                            <div class="col-md-6">
+                                <label class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" name="phone" 
+                                       value="{{ vendor.phone|default('') }}" 
+                                       placeholder="e.g. +234 803 123 4567">
+                            </div>
+
+                            <!-- Email -->
+                            <div class="col-md-6">
+                                <label class="form-label">Email Address</label>
+                                <input type="email" class="form-control" name="email" 
+                                       value="{{ vendor.email|default('') }}" 
+                                       placeholder="vendor@example.com">
+                            </div>
+
+                            <!-- Address -->
+                            <div class="col-12">
+                                <label class="form-label">Physical Address</label>
+                                <textarea class="form-control" name="address" rows="3"
+                                          placeholder="Street, City, State">{{ vendor.address|default('') }}</textarea>
+                            </div>
+
+                            <!-- Bank Details -->
+                            <div class="col-md-6">
+                                <label class="form-label">Bank Name</label>
+                                <input type="text" class="form-control" name="bank_name" 
+                                       value="{{ vendor.bank_name|default('') }}" 
+                                       placeholder="e.g. Zenith Bank Plc">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Account Number</label>
+                                <input type="text" class="form-control" name="account_number" 
+                                       value="{{ vendor.account_number|default('') }}" 
+                                       placeholder="e.g. 0123456789">
+                            </div>
+
+                            <!-- Submit buttons -->
+                            <div class="col-12 mt-4 d-flex gap-3">
+                                <button type="submit" class="btn btn-primary btn-lg px-5">
+                                    {% if is_edit %}Update Vendor{% else %}Save Vendor{% endif %}
+                                </button>
+                                <a href="/vendors" class="btn btn-outline-secondary btn-lg px-5">
+                                    Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

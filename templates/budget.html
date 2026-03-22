@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+{% block title %}Budget - UROMI NGO Accounting{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header with title + back button -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Budget Overview</h1>
+        <a href="/dashboard" class="btn btn-outline-secondary">
+            ← Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Grand Total badge (optional - can be removed if you prefer it in table footer only) -->
+    {% if grand_total %}
+    <div class="mb-3">
+        <span class="badge bg-success fs-5 px-4 py-2">
+            Grand Total: {{ grand_total|format_currency }}
+        </span>
+    </div>
+    {% endif %}
+
+    <!-- Messages -->
+    {% if success_msg %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {% if success_msg == 'added' %}New budget line added successfully!{% endif %}
+        {% if success_msg == 'updated' %}Budget line updated successfully!{% endif %}
+        {% if success_msg == 'deleted' %}Budget line deleted successfully.{% endif %}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    {% if error_msg or error %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ error_msg or error }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    <!-- Form Card -->
+    <div class="card shadow-sm mb-5 border-0">
+        <div class="card-header {% if editing_id %}bg-warning{% else %}bg-primary{% endif %} text-white">
+            <h5 class="mb-0 fw-semibold">
+                {% if editing_id %}✏️ Edit Budget Line #{{ editing_id }}{% else %}➕ Add New Budget Line{% endif %}
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="post"
+                  action="{% if editing_id %}/update-budget{% else %}/add-budget{% endif %}"
+                  id="budget-form">
+                {% if editing_id %}
+                <input type="hidden" name="id" value="{{ editing_id }}">
+                {% endif %}
+
+                <div class="row g-3">
+                    <!-- Project -->
+                    <div class="col-md-6">
+                        <label for="project" class="form-label">Project *</label>
+                        <input type="text" class="form-control" id="project" name="project"
+                               value="{{ form_data.project or '' }}" required
+                               placeholder="e.g. Education Support 2025">
+                    </div>
+
+                    <!-- Main Account -->
+                    <div class="col-md-6">
+                        <label for="main_account_select" class="form-label">Main Account *</label>
+                        <select class="form-select" id="main_account_select" name="account_code" required>
+                            <option value="">-- Select Main Account --</option>
+                            {% for acc in main_accounts %}
+                            <option value="{{ acc.account_code }}"
+                                    data-account-name="{{ acc.account_name }}"
+                                    {% if form_data.account_code == acc.account_code %}selected{% endif %}>
+                                {{ acc.account_code }} — {{ acc.account_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <input type="hidden" name="account_name" id="main_account_name_hidden"
+                               value="{{ form_data.account_name or '' }}">
+                    </div>
+
+                    <!-- Sub Account -->
+                    <div class="col-md-6">
+                        <label for="sub_account_select" class="form-label">Sub Account (optional)</label>
+                        <select class="form-select" id="sub_account_select" name="subaccount_code">
+                            <option value="">-- Select Sub Account --</option>
+                            {% for sub in subaccounts %}
+                            <option value="{{ sub.sub_account_code }}"
+                                    data-parent="{{ sub.parent_account_code }}"
+                                    data-sub-name="{{ sub.sub_account_name }}"
+                                    {% if form_data.subaccount_code == sub.sub_account_code %}selected{% endif %}>
+                                {{ sub.sub_account_code }} — {{ sub.sub_account_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <input type="hidden" name="subaccount_name" id="sub_account_name_hidden"
+                               value="{{ form_data.subaccount_name or '' }}">
+                    </div>
+
+                    <!-- Detail -->
+                    <div class="col-12">
+                        <label for="detail" class="form-label">Detail / Description *</label>
+                        <input type="text" class="form-control" id="detail" name="detail"
+                               value="{{ form_data.detail or '' }}" required
+                               placeholder="e.g. Procurement of textbooks for 2025">
+                    </div>
+
+                    <!-- Numbers row -->
+                    <div class="col-md-4">
+                        <label for="quantity" class="form-label">Quantity *</label>
+                        <input type="number" step="0.01" class="form-control" id="quantity" name="quantity"
+                               value="{{ form_data.quantity or '' }}" required min="0" placeholder="0.00">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="unit_cost" class="form-label">Unit Cost (₦) *</label>
+                        <input type="number" step="0.01" class="form-control" id="unit_cost" name="unit_cost"
+                               value="{{ form_data.unit_cost or '' }}" required min="0" placeholder="0.00">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="periods" class="form-label">Periods *</label>
+                        <input type="number" class="form-control" id="periods" name="periods"
+                               value="{{ form_data.periods or '' }}" required min="1" placeholder="1">
+                    </div>
+
+                    <!-- Live total preview -->
+                    <div class="col-12">
+                        <small class="text-muted">Estimated Total:</small>
+                        <strong id="preview_total" class="ms-2">₦0.00</strong>
+                    </div>
+
+                    <!-- Submit / Cancel buttons -->
+                    <div class="col-12 mt-4 d-flex gap-3">
+                        <button type="submit" class="btn btn-primary flex-grow-1 fw-semibold">
+                            {% if editing_id %}💾 Update Budget Line{% else %}💾 Add Budget Line{% endif %}
+                        </button>
+                        {% if editing_id %}
+                        <a href="/budget" class="btn btn-outline-secondary flex-grow-1">Cancel Edit</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Budget Lines Table -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0 fw-semibold">Existing Budget Lines</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Project</th>
+                            <th>Account Code</th>
+                            <th>Account Name</th>
+                            <th>Sub-account</th>
+                            <th>Detail</th>
+                            <th class="text-end">Qty</th>
+                            <th class="text-end">Unit Cost</th>
+                            <th class="text-end">Periods</th>
+                            <th class="text-end">Total (₦)</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if budgets %}
+                            {% for b in budgets %}
+                            <tr {% if editing_id == b.id %}class="table-warning"{% endif %}>
+                                <td>{{ b.project }}</td>
+                                <td>{{ b.account_code }}</td>
+                                <td>{{ b.account_name }}</td>
+                                <td>{{ b.subaccount_code or '—' }}</td>
+                                <td>{{ b.detail }}</td>
+                                <td class="text-end">{{ b.quantity }}</td>
+                                <td class="text-end">{{ b.unit_cost|format_currency }}</td>
+                                <td class="text-end">{{ b.periods }}</td>
+                                <td class="text-end fw-bold">{{ b.total|format_currency }}</td>
+                                <td class="text-center">
+                                    <a href="/edit-budget/{{ b.id }}" class="btn btn-sm btn-warning me-1">Edit</a>
+                                    <form action="/delete-budget/{{ b.id }}" method="post" style="display:inline;">
+                                        <button type="submit" class="btn btn-sm btn-danger"
+                                                onclick="return confirm('Delete this budget line permanently?');">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="10" class="text-center py-5 text-muted fst-italic">
+                                    No budget lines created yet. Add your first entry above.
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                    <tfoot class="table-active">
+                        <tr>
+                            <th colspan="8" class="text-end">Grand Total</th>
+                            <th class="text-end fs-5">{{ grand_total|format_currency }}</th>
+                            <th></th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for sub-account filtering + live total preview -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const mainSelect = document.getElementById('main_account_select');
+    const subSelect = document.getElementById('sub_account_select');
+    const mainNameHidden = document.getElementById('main_account_name_hidden');
+    const subNameHidden = document.getElementById('sub_account_name_hidden');
+    const qtyInput = document.getElementById('quantity');
+    const unitInput = document.getElementById('unit_cost');
+    const periodsInput = document.getElementById('periods');
+    const previewEl = document.getElementById('preview_total');
+
+    function updatePreview() {
+        if (!previewEl) return;
+        const qty = parseFloat(qtyInput?.value) || 0;
+        const unit = parseFloat(unitInput?.value) || 0;
+        const periods = parseInt(periodsInput?.value) || 0;
+        const total = qty * unit * periods;
+        previewEl.textContent = '₦' + total.toLocaleString('en-NG', {minimumFractionDigits: 2});
+    }
+
+    if (mainSelect && subSelect) {
+        mainSelect.addEventListener('change', function () {
+            const selected = this.options[this.selectedIndex];
+            mainNameHidden.value = selected.getAttribute('data-account-name') || '';
+            const selectedCode = this.value;
+            Array.from(subSelect.options).forEach(opt => {
+                if (opt.value === '') {
+                    opt.style.display = 'block';
+                } else {
+                    const parent = opt.getAttribute('data-parent');
+                    opt.style.display = (selectedCode && parent === selectedCode) ? 'block' : 'none';
+                }
+            });
+            subSelect.value = '';
+            subNameHidden.value = '';
+        });
+
+        subSelect.addEventListener('change', function () {
+            const selected = this.options[this.selectedIndex];
+            subNameHidden.value = selected.getAttribute('data-sub-name') || '';
+        });
+    }
+
+    // Live total preview
+    if (qtyInput && unitInput && periodsInput && previewEl) {
+        [qtyInput, unitInput, periodsInput].forEach(el => {
+            el.addEventListener('input', updatePreview);
+        });
+        updatePreview(); // initial calculation
+    }
+});
+</script>
+{% endblock %}

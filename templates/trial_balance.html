@@ -1,8 +1,9 @@
 <!DOCTYPE html>
+
 <html>
 
 <head>
-<title>UROMI NGO Accounting - Ledger</title>
+<title>Trial Balance</title>
 
 <style>
 
@@ -12,6 +13,8 @@ margin:0;
 background:#f4f6f9;
 }
 
+/* Top header */
+
 .header{
 background:#1e293b;
 color:white;
@@ -19,9 +22,13 @@ padding:15px 30px;
 font-size:20px;
 }
 
+/* Container */
+
 .container{
 padding:30px;
 }
+
+/* Card */
 
 .card{
 background:white;
@@ -30,34 +37,40 @@ border-radius:8px;
 box-shadow:0 2px 5px rgba(0,0,0,0.1);
 }
 
-/* REPORT HEADER */
+/* Report Header */
 
 .report-header{
 display:flex;
 align-items:center;
 justify-content:space-between;
 margin-bottom:20px;
+border-bottom:2px solid #ddd;
+padding-bottom:10px;
+}
+
+.logo{
+width:70px;
 }
 
 .logo img{
-height:60px;
+width:70px;
 }
 
-.report-title{
+.org-title{
 text-align:center;
-flex-grow:1;
+flex:1;
 }
 
-.report-title h2{
+.org-title h2{
 margin:0;
 }
 
 .report-info{
-font-size:13px;
 text-align:right;
+font-size:13px;
 }
 
-/* BUTTON */
+/* Print Button */
 
 .print-bar{
 margin-bottom:15px;
@@ -76,7 +89,7 @@ button:hover{
 background:#334155;
 }
 
-/* TABLE */
+/* Table */
 
 table{
 width:100%;
@@ -98,13 +111,9 @@ tr:hover{
 background:#f1f5f9;
 }
 
-.balance{
-font-weight:bold;
-}
+/* PRINT STYLE */
 
-/* PRINT STYLES */
-
-@media print {
+@media print{
 
 .header{
 display:none;
@@ -127,21 +136,6 @@ box-shadow:none;
 border:none;
 }
 
-.report-header{
-border-bottom:2px solid #000;
-padding-bottom:10px;
-margin-bottom:20px;
-}
-
-footer{
-position:fixed;
-bottom:0;
-left:0;
-right:0;
-text-align:center;
-font-size:12px;
-}
-
 }
 
 </style>
@@ -151,7 +145,7 @@ font-size:12px;
 <body>
 
 <div class="header">
-UROMI NGO Accounting – General Ledger
+NGO Accounting System
 </div>
 
 <div class="container">
@@ -159,18 +153,18 @@ UROMI NGO Accounting – General Ledger
 <div class="card">
 
 <div class="print-bar">
-<button onclick="printLedger()">Print Ledger</button>
+<button onclick="printReport()">Print Report</button>
 </div>
 
 <div class="report-header">
 
 <div class="logo">
-<img src="/static/logo.png" alt="UROMI NGO Logo">
+<img src="/static/logo.png">
 </div>
 
-<div class="report-title">
-<h2>GENERAL LEDGER</h2>
-<div>UROMI NGO – Financial Report</div>
+<div class="org-title">
+<h2>UROMI NGO</h2>
+<div>Trial Balance Report</div>
 </div>
 
 <div class="report-info">
@@ -183,28 +177,20 @@ Printed: <span id="printDate"></span>
 
 <thead>
 <tr>
-<th>Date</th>
-<th>Description</th>
 <th>Account</th>
-<th>Sub Account</th>
 <th>Debit</th>
 <th>Credit</th>
-<th>Balance</th>
 </tr>
 </thead>
 
 <tbody>
 
-{% for l in ledger %}
+{% for r in rows %}
 
 <tr>
-<td>{{l.date}}</td>
-<td>{{l.description}}</td>
-<td>{{l.account}}</td>
-<td>{{l.sub_account}}</td>
-<td>{{l.debit}}</td>
-<td>{{l.credit}}</td>
-<td class="balance">{{l.balance}}</td>
+<td>{{r.account}}</td>
+<td>{{r.debit}}</td>
+<td>{{r.credit}}</td>
 </tr>
 
 {% endfor %}
@@ -217,13 +203,9 @@ Printed: <span id="printDate"></span>
 
 </div>
 
-<footer>
-UROMI NGO Accounting System
-</footer>
-
 <script>
 
-function printLedger(){
+function printReport(){
 window.print();
 }
 

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Chart of Accounts</title>
+
+<style>
+
+body{
+font-family: Arial;
+margin:40px;
+background:#f4f6f9;
+}
+
+h1{
+color:#1e293b;
+}
+
+.container{
+display:flex;
+gap:40px;
+flex-wrap:wrap;
+margin-bottom:40px;
+}
+
+form{
+background:white;
+padding:20px;
+width:420px;
+border-radius:10px;
+box-shadow:0 3px 10px rgba(0,0,0,0.08);
+}
+
+form h3{
+margin-top:0;
+color:#1e293b;
+}
+
+label{
+font-weight:bold;
+display:block;
+margin-top:10px;
+}
+
+input,select{
+width:100%;
+padding:10px;
+margin-top:5px;
+margin-bottom:15px;
+border:1px solid #ccc;
+border-radius:6px;
+}
+
+button{
+padding:10px 15px;
+background:#1e293b;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+font-weight:bold;
+}
+
+button:hover{
+background:#0f172a;
+}
+
+table{
+border-collapse:collapse;
+width:100%;
+background:white;
+box-shadow:0 3px 10px rgba(0,0,0,0.05);
+}
+
+th,td{
+border:1px solid #ddd;
+padding:10px;
+text-align:left;
+}
+
+th{
+background:#1e293b;
+color:white;
+}
+
+tr:hover{
+background:#f9fafb;
+}
+
+.sub{
+background:#f3f4f6;
+color:#555;
+}
+
+.sub td:nth-child(2){
+padding-left:25px;
+}
+
+.delete{
+background:#dc2626;
+}
+
+.delete:hover{
+background:#b91c1c;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>Chart of Accounts</h1>
+
+<div class="container">
+
+<!-- ADD MAIN ACCOUNT -->
+
+<form method="post" action="/add-account">
+
+<h3>Add Main Account</h3>
+
+<label>Account Code</label>
+<input type="text" name="account_code" required>
+
+<label>Account Name</label>
+<input type="text" name="account_name" required>
+
+<label>Account Type</label>
+
+<select name="account_type" required>
+<option value="">Select Type</option>
+<option value="Asset">Asset</option>
+<option value="Liability">Liability</option>
+<option value="Income">Income</option>
+<option value="Expense">Expense</option>
+<option value="Equity">Equity</option>
+</select>
+
+<label>Description</label>
+<input type="text" name="description">
+
+<button type="submit">Add Account</button>
+
+</form>
+
+<!-- ADD SUB ACCOUNT -->
+
+<form method="post" action="/add-subaccount">
+
+<h3>Add Sub Account</h3>
+
+<label>Parent Account</label>
+
+<select name="parent_account" required>
+
+<option value="">Select Parent Account</option>
+
+{% for a in accounts %}
+
+<option value="{{ a.account_code }}">
+{{ a.account_name }} - {{ a.account_code }}
+</option>
+
+{% endfor %}
+
+</select>
+
+<label>Sub Account Code</label>
+<input type="text" name="sub_account_code" required>
+
+<label>Sub Account Name</label>
+<input type="text" name="sub_account_name" required>
+
+<label>Description</label>
+<input type="text" name="description">
+
+<button type="submit">Add Sub Account</button>
+
+</form>
+
+</div>
+
+<h2>Existing Accounts</h2>
+
+<table>
+
+<tr>
+<th>Code</th>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Action</th>
+</tr>
+
+{% for a in accounts %}
+
+<tr>
+<td>{{ a.account_code }}</td>
+<td><b>{{ a.account_name }}</b></td>
+<td>{{ a.account_type }}</td>
+<td>{{ a.description }}</td>
+
+<td>
+<a href="/delete-account/{{ a.id }}" onclick="return confirm('Delete this account?')">
+<button class="delete">Delete</button>
+</a>
+</td>
+
+</tr>
+
+<!-- SUB ACCOUNTS -->
+
+{% for s in subaccounts %}
+{% if s.parent_account == a.account_code %}
+
+<tr class="sub">
+
+<td>{{ s.sub_account_code }}</td>
+<td>— {{ s.sub_account_name }}</td>
+<td>Sub Account</td>
+<td>{{ s.description }}</td>
+<td></td>
+
+</tr>
+
+{% endif %}
+{% endfor %}
+
+{% endfor %}
+
+</table>
+
+</body>
+</html>

@@ -32,14 +32,14 @@ async def view_voucher(transaction_id: int, request: Request):
             tx = dict(row)
 
         gross_amount = safe_float(tx.get("amount", 0))
-        wht_applied  = bool(safe_float(tx.get("wht_applied", 0)))
-        wht_rate     = safe_float(tx.get("wht_rate", 0.0))
-        wht_amount   = gross_amount * wht_rate if wht_applied else 0.0
-        net_amount   = gross_amount - wht_amount
+        wht_applied = bool(safe_float(tx.get("wht_applied", 0)))
+        wht_rate = safe_float(tx.get("wht_rate", 0.0))
+        wht_amount = gross_amount * wht_rate if wht_applied else 0.0
+        net_amount = gross_amount - wht_amount
 
         gross_str = f"₦{gross_amount:,.2f}"
-        wht_str   = f"₦{wht_amount:,.2f}" if wht_applied and wht_amount > 0 else "₦0.00"
-        net_str   = f"₦{net_amount:,.2f}"
+        wht_str = f"₦{wht_amount:,.2f}" if wht_applied and wht_amount > 0 else "₦0.00"
+        net_str = f"₦{net_amount:,.2f}"
 
         amount_in_words = number_to_ngn_words(net_amount)
 
@@ -72,7 +72,7 @@ async def view_voucher(transaction_id: int, request: Request):
         }
 
         response = templates.TemplateResponse("payment-voucher-print.html", context)
-        response.headers["Content-Disposition"] = f"inline; filename=\"voucher-{context['pv_number']}.html\""
+        response.headers["Content-Disposition"] = f'inline; filename="voucher-{context["pv_number"]}.html"'
         return response
 
     except HTTPException:

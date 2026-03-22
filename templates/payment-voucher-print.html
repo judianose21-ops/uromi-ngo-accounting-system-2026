@@ -1,168 +1,85 @@
-{% extends "base.html" %}
-{% block title %}Transactions - UROMI NGO Accounting{% endblock %}
-{% block content %}
-<div class="container-fluid mt-4">
-    <!-- HEADER -->
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-        <h2 class="mb-0">📊 Transaction List</h2>
-        <div class="d-flex gap-2">
-            <a href="/add-transaction" class="btn btn-primary">
-                <i class="bi bi-plus-lg"></i> Add Transaction
-            </a>
-            <a href="/export" class="btn btn-outline-secondary">
-                <i class="bi bi-download"></i> Export CSV
-            </a>
-        </div>
-    </div>
+from fastapi import HTTPException, Request
+from fastapi.responses import HTMLResponse
+import traceback
 
-    {% if transactions|length == 0 %}
-        <div class="alert alert-info text-center py-4">
-            No transactions recorded yet.
-        </div>
-    {% else %}
-    <!-- SEARCH + SUMMARY -->
-    <div class="row mb-3 align-items-center">
-        <div class="col-md-6">
-            <input type="text" class="form-control" id="searchInput"
-                   placeholder="🔍 Search by description, vendor, PV, account...">
-        </div>
-        <div class="col-md-6 text-md-end mt-2 mt-md-0">
-            <strong>Total Gross: ₦<span id="totalGross">0.00</span></strong>
-              |  
-            <strong>Net: ₦<span id="totalNet">0.00</span></strong>
-        </div>
-    </div>
+@app.get("/voucher/{transaction_id}", response_class=HTMLResponse)
+async def view_voucher(transaction_id: int, request: Request):
+    try:
+        with get_db() as conn:
+            row = conn.execute("""
+                SELECT
+                    id,
+                    date,
+                    pv_number,
+                    reference,
+                    description,
+                    type,
+                    amount,
+                    wht_applied,
+                    wht_rate,
+                    project,
+                    main_account,
+                    main_account_code,
+                    sub_account,
+                    sub_account_code
+                FROM transactions
+                WHERE id = ?
+            """, (transaction_id,)).fetchone()
 
-    <!-- TABLE -->
-    <div class="card shadow-sm border-0">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover table-striped align-middle mb-0 small" id="transactionTable">
-                    <thead class="table-dark text-nowrap">
-                        <tr>
-                            <th>Date</th>
-                            <th>PV No.</th>
-                            <th>Vendor</th>
-                            <th>Description</th>
-                            <th>Account</th>
-                            <th>Type</th>
-                            <th class="text-end">Gross</th>
-                            <th class="text-end">WHT</th>
-                            <th class="text-end">Net</th>
-                            <th class="text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for t in transactions %}
-                        <tr data-type="{{ t.type }}">
-                            <td class="text-nowrap">{{ t.date }}</td>
-                            
-                            <!-- PV NUMBER - NOW LINKS TO HTML VOUCHER (print-friendly) -->
-                            <td class="text-nowrap">
-                                <a href="/voucher/html/{{ t.id }}"
-                                   target="_blank" rel="noopener noreferrer"
-                                   class="text-primary fw-bold text-decoration-underline"
-                                   title="View & Print Payment Voucher (HTML)">
-                                    {{ t.pv_number or 'PV-' ~ t.id|string }}
-                                </a>
-                            </td>
+            if not row:
+                raise HTTPException(status_code=404, detail="Transaction not found")
 
-                            <!-- VENDOR + TIN -->
-                            <td>
-                                {{ t.vendor_name or '—' }}
-                                {% if t.vendor_tin %}
-                                    <br><small class="text-muted">TIN: {{ t.vendor_tin }}</small>
-                                {% endif %}
-                            </td>
+            tx = dict(row)
 
-                            <!-- DESCRIPTION -->
-                            <td>{{ t.description or '—' }}</td>
+        gross_amount = safe_float(tx.get("amount", 0))
+        wht_applied  = bool(safe_float(tx.get("wht_applied", 0)))
+        wht_rate     = safe_float(tx.get("wht_rate", 0.0))
+        wht_amount   = gross_amount * wht_rate if wht_applied else 0.0
+        net_amount   = gross_amount - wht_amount
 
-                            <!-- ACCOUNT (main + sub) -->
-                            <td>
-                                {{ t.main_account or '—' }}
-                                {% if t.main_account_code or t.sub_account %}
-                                    <br><small class="text-muted">
-                                        {{ t.main_account_code or '' }}
-                                        {% if t.sub_account_code %} • {{ t.sub_account_code }}{% endif %}
-                                    </small>
-                                {% endif %}
-                            </td>
+        gross_str = f"₦{gross_amount:,.2f}"
+        wht_str   = f"₦{wht_amount:,.2f}" if wht_applied and wht_amount > 0 else "₦0.00"
+        net_str   = f"₦{net_amount:,.2f}"
 
-                            <!-- TYPE -->
-                            <td>
-                                <span class="badge rounded-pill {{ 'bg-success' if t.type == 'Income' else 'bg-danger' }}">
-                                    {{ t.type }}
-                                </span>
-                            </td>
+        amount_in_words = number_to_ngn_words(net_amount)
 
-                            <!-- AMOUNTS -->
-                            <td class="text-end fw-bold amount-gross">
-                                {{ t.amount|format_currency }}
-                            </td>
-                            <td class="text-end amount-wht text-danger">
-                                {{ (t.WHT_amount or 0)|format_currency }}
-                            </td>
-                            <td class="text-end fw-bold amount-net">
-                                {{ (t.net_amount or (t.amount - (t.WHT_amount or 0)))|format_currency }}
-                            </td>
+        payee = tx.get("reference") or tx.get("payee") or "Not specified"
+        payee_tin = tx.get("payee_tin") or tx.get("vendor_tin") or "—"
 
-                            <!-- ACTIONS -->
-                            <td class="text-center">
-                                <div class="btn-group btn-group-sm">
-                                    <a href="/edit-transaction/{{ t.id }}" class="btn btn-warning" title="Edit">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <form action="/delete-transaction/{{ t.id }}" method="post"
-                                          style="display:inline;" onsubmit="return confirm('Delete this transaction?');">
-                                        <button type="submit" class="btn btn-danger" title="Delete">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-</div>
+        context = {
+            "request": request,
+            "tx": tx,
+            "organization": "CARE INTERNATIONAL",
+            "voucher_title": "PAYMENT VOUCHER" if tx.get("type") == "Expense" else "RECEIPT VOUCHER",
+            "pv_number": tx.get("pv_number") or f"PV-{tx['id']:04d}",
+            "date": tx.get("date", "—"),
+            "description": tx.get("description", "—"),
+            "project": tx.get("project", "—"),
+            "payee": payee,
+            "payee_tin": payee_tin,
+            "main_account_code": tx.get("main_account_code", "—"),
+            "main_account": tx.get("main_account", "—"),
+            "sub_account_code": tx.get("sub_account_code", "—"),
+            "sub_account": tx.get("sub_account", "—"),
+            "gross_amount_formatted": gross_str,
+            "wht_applied": wht_applied,
+            "wht_rate_percent": f"{wht_rate * 100:.1f}" if wht_applied else "0.0",
+            "wht_amount_formatted": wht_str,
+            "net_amount_formatted": net_str,
+            "net_amount_in_words": amount_in_words,
+            "prepared_by": "Jude Oko-Oboh",
+            "approved_by": "Abba Umar",
+        }
 
-<!-- JavaScript: Search + Dynamic Totals -->
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const searchInput = document.getElementById('searchInput');
-    const rows = document.querySelectorAll('#transactionTable tbody tr');
+        response = templates.TemplateResponse("payment-voucher-print.html", context)
+        response.headers["Content-Disposition"] = f"inline; filename=\"voucher-{context['pv_number']}.html\""
+        return response
 
-    function calculateTotals() {
-        let gross = 0, net = 0;
-        document.querySelectorAll('#transactionTable tbody tr:not([style*="display: none"])').forEach(row => {
-            const g = parseFloat(row.querySelector('.amount-gross')?.innerText.replace(/[^0-9.-]+/g, '')) || 0;
-            const n = parseFloat(row.querySelector('.amount-net')?.innerText.replace(/[^0-9.-]+/g, '')) || 0;
-            gross += g;
-            net += n;
-        });
-        document.getElementById('totalGross').innerText = gross.toLocaleString('en-NG', {
-            minimumFractionDigits: 2, maximumFractionDigits: 2
-        });
-        document.getElementById('totalNet').innerText = net.toLocaleString('en-NG', {
-            minimumFractionDigits: 2, maximumFractionDigits: 2
-        });
-    }
-
-    searchInput.addEventListener('input', () => {
-        const filter = searchInput.value.toLowerCase().trim();
-        rows.forEach(row => {
-            const text = row.innerText.toLowerCase();
-            row.style.display = text.includes(filter) ? '' : 'none';
-        });
-        calculateTotals();
-    });
-
-    calculateTotals();
-});
-</script>
-{% endblock %}
+    except HTTPException:
+        raise
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to load voucher: {str(e)}"
+        )

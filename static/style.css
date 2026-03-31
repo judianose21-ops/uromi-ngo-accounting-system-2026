@@ -5,6 +5,17 @@ body {
     background-color: #f4f6f9;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: #333;
+    line-height: 1.5;
+    margin: 0;
+    padding: 0;
+}
+
+/* =========================
+   LAYOUT FIX (VERY IMPORTANT)
+========================= */
+.main-content {
+    margin-left: 260px;   /* prevents sidebar overlap */
+    padding: 20px;
 }
 
 /* =========================
@@ -13,104 +24,206 @@ body {
 .sidebar {
     width: 250px;
     min-height: 100vh;
-    background-color: #343a40;
+    background-color: #1e293b;
     color: #fff;
-    padding: 20px 15px;
+    padding: 15px 12px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    overflow-y: auto;
 }
 
 .sidebar h3,
 .sidebar small {
     color: #fff;
+    margin-bottom: 8px;
 }
 
+/* Sidebar Links */
 .sidebar .nav-link,
 .sidebar .btn {
-    color: #fff;
-    transition: all 0.2s ease;
+    color: #cbd5e1;
+    transition: all 0.25s ease;
+    padding: 8px 12px;
+    border-radius: 6px;
+    display: block;
 }
 
-.sidebar .nav-link:hover,
-.sidebar .btn:hover {
-    background-color: #495057;
-    border-radius: 6px;
-    padding-left: 10px;
+.sidebar .nav-link:hover {
+    background-color: #334155;
+    color: #fff;
+    padding-left: 16px;
 }
 
 .sidebar .nav-link.active {
     background-color: #0d6efd;
-    border-radius: 6px;
+    color: #fff;
+    font-weight: 500;
 }
 
 /* =========================
    CARDS
 ========================= */
 .card {
-    border-radius: 0.7rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
     border: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
 
 /* =========================
-   TABLES
+   TABLES (MAJOR FIXES HERE)
 ========================= */
 .table {
-    margin-bottom: 0;
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
 }
 
-.table th {
+/* 🔥 FIX: Ensure headers are visible */
+.table thead {
+    background: linear-gradient(to right, #1e3c72, #2a5298);
+}
+
+.table thead th {
+    color: #ffffff !important;
     font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 12px;
+    border-bottom: 2px solid #dee2e6;
 }
 
-/* 🔥 IMPORTANT FOR PDF + VOUCHER */
-table, tr, td {
-    page-break-inside: avoid;
+/* Sticky header (PRO FEATURE) */
+.table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+/* Table body */
+.table tbody tr {
+    border-bottom: 1px solid #eee;
+    transition: background 0.2s ease;
+}
+
+.table tbody tr:hover {
+    background-color: #f1f5f9;
+}
+
+/* Cells */
+th, td {
+    padding: 10px 12px;
+    vertical-align: middle;
 }
 
 td {
     word-wrap: break-word;
+    font-size: 14px;
+}
+
+/* Zebra striping */
+.table tbody tr:nth-child(even) {
+    background-color: #fafafa;
 }
 
 /* =========================
-   CHART / CANVAS
+   BADGES (Income / Expense)
+========================= */
+.badge-income {
+    background-color: #16a34a;
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+}
+
+.badge-expense {
+    background-color: #dc2626;
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+.btn-primary {
+    background-color: #2563eb;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #1d4ed8;
+}
+
+.btn-danger {
+    background-color: #ef4444;
+    border: none;
+}
+
+.btn-warning {
+    background-color: #f59e0b;
+    border: none;
+}
+
+/* =========================
+   SEARCH BAR
+========================= */
+input[type="search"],
+input[type="text"] {
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    width: 100%;
+    max-width: 400px;
+}
+
+/* =========================
+   CHARTS / CANVAS
 ========================= */
 canvas {
     background-color: #fff;
-    border-radius: 0.5rem;
-    padding: 10px;
+    border-radius: 0.75rem;
+    padding: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 /* =========================
    MODAL IMPROVEMENTS
 ========================= */
 .modal-content {
-    border-radius: 10px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
 }
 
-.modal-header {
-    border-bottom: 1px solid #eee;
-}
-
+.modal-header,
 .modal-footer {
-    border-top: 1px solid #eee;
+    padding: 14px 20px;
+    border-color: #eee;
 }
 
 /* =========================
    PRINT STYLES (VOUCHER)
 ========================= */
 @media print {
-
-    /* Reset background */
     body {
         background: #fff;
         margin: 0;
+        font-size: 10pt;
     }
 
-    /* Hide everything */
     body * {
         visibility: hidden;
     }
 
-    /* Show only voucher modal */
     #voucherModal,
     #voucherModal * {
         visibility: visible;
@@ -123,32 +236,30 @@ canvas {
         width: 100%;
     }
 
-    /* Expand modal to full page */
     .modal-dialog {
-        max-width: 100%;
+        max-width: 100% !important;
         margin: 0;
     }
 
-    /* Remove modal styling constraints */
     .modal-content {
         border: none;
         box-shadow: none;
+        border-radius: 0;
     }
 
-    /* Hide buttons */
     .no-print,
     .modal-header .btn-close,
     .modal-footer {
         display: none !important;
     }
 
-    /* 🔥 Ensure voucher fits one page */
-    table, tr, td {
-        page-break-inside: avoid;
-    }
-
-    /* Slight spacing reduction for print */
     th, td {
-        padding: 5px !important;
+        padding: 5px 8px !important;
+        font-size: 9.5pt;
     }
+}
+
+/* Fix rowspan alignment */
+td[rowspan] {
+    vertical-align: top;
 }

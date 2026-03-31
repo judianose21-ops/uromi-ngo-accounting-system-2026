@@ -19,8 +19,8 @@
                     </div>
                     {% endif %}
 
-                    <form action="{% if is_edit %}/edit-transaction/{{ edit_id }}{% else %}/add-transaction{% endif %}"
-                          method="post" id="transactionForm">
+                    <form method="POST" action="/update-transaction">
+		    <input type="hidden" name="id" value="{{ edit_id }}">
                         <div class="row g-3">
 
                             <!-- Date -->

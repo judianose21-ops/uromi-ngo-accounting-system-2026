@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% if is_edit %}Edit Transaction{% else %}Add Transaction{% endif %} - UROMI NGO Accounting</title>
 
-    <!-- Your existing styles -->
     <style>
-        /* your existing styles – unchanged */
         body { font-family: Arial, sans-serif; background: #f4f6f9; padding: 20px; margin: 0; }
         .container { max-width: 750px; margin: 0 auto; }
         .card { background: #fff; border-radius: 14px; box-shadow: 0 12px 30px rgba(0,0,0,0.08); overflow: hidden; }
@@ -16,19 +14,19 @@
         .row { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; }
         .col { flex: 1; min-width: 200px; }
         label { font-weight: 600; font-size: 14px; display: block; margin-bottom: 5px; }
-        input, select { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; }
-        input:focus, select:focus { outline: none; border-color: #4e73df; box-shadow: 0 0 0 3px rgba(78,115,223,0.2); }
-        .btn { padding: 12px 20px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 16px; text-align: center; }
+        input, select { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #ddd; font-size: 16px; }
+        .btn { padding: 12px 20px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 16px; }
         .btn-primary { background: linear-gradient(135deg, #4e73df, #224abe); color: white; }
         .btn-danger { background: #dc3545; color: white; }
         .actions { display: flex; gap: 10px; margin-top: 20px; }
         .divider { height: 1px; background: #eee; margin: 20px 0; }
-        .form-check { margin: 15px 0; }
     </style>
 </head>
+
 <body>
 <div class="container">
     <div class="card">
+
         <div class="header">
             <h2>
                 {% if is_edit %}
@@ -40,39 +38,46 @@
         </div>
 
         <div class="card-body">
-            <form method="POST" 
+
+            <form method="POST"
                   action="{% if is_edit %}/update-transaction{% else %}/add-transaction{% endif %}">
 
                 {% if is_edit %}
-                    <input type="hidden" name="id" value="{{ edit_id }}">
+                <input type="hidden" name="id" value="{{ edit_id }}">
                 {% endif %}
 
                 <!-- DATE -->
                 <div class="row">
                     <div class="col">
-                        <label for="date">Date *</label>
-                        <input type="date" id="date" name="date" 
-                               value="{{ form_data.date or transaction.date or '' }}" required>
+                        <label>Date</label>
+                        <input type="date" name="date"
+                        value="{{ form_data.date if form_data else (transaction.date if transaction else '') }}" required>
                     </div>
                 </div>
 
                 <!-- DESCRIPTION -->
                 <div class="row">
                     <div class="col">
-                        <label for="description">Description *</label>
-                        <input type="text" id="description" name="description" 
-                               value="{{ form_data.description or transaction.description or '' }}" required>
+                        <label>Description</label>
+                        <input type="text" name="description"
+                        value="{{ form_data.description if form_data else (transaction.description if transaction else '') }}" required>
                     </div>
                 </div>
 
                 <!-- TYPE -->
                 <div class="row">
                     <div class="col">
-                        <label for="type">Type *</label>
-                        <select id="type" name="type" required>
+                        <label>Type</label>
+                        <select name="type" required>
                             <option value="">Select</option>
-                            <option value="Income" {% if form_data.type == 'Income' or transaction.type == 'Income' %}selected{% endif %}>Income</option>
-                            <option value="Expense" {% if form_data.type == 'Expense' or transaction.type == 'Expense' %}selected{% endif %}>Expense</option>
+                            <option value="Income"
+                            {% if (form_data and form_data.type=='Income') or (transaction and transaction.type=='Income') %}selected{% endif %}>
+                                Income
+                            </option>
+                            <option value="Expense"
+                            {% if (form_data and form_data.type=='Expense') or (transaction and transaction.type=='Expense') %}selected{% endif %}>
+                                Expense
+                            </option>
                         </select>
                     </div>
                 </div>
@@ -80,57 +85,66 @@
                 <!-- AMOUNT -->
                 <div class="row">
                     <div class="col">
-                        <label for="gross_amount">Amount *</label>
-                        <input type="number" step="0.01" min="0.01" id="gross_amount" name="gross_amount"
-                               value="{{ form_data.gross_amount or transaction.amount|float if transaction.amount else '' }}" required>
+                        <label>Amount</label>
+                        <input type="number" step="0.01" name="amount"
+                        value="{{ form_data.gross_amount if form_data else (transaction.amount if transaction else '') }}" required>
                     </div>
                 </div>
 
                 <div class="divider"></div>
 
-                <!-- MAIN + SUB ACCOUNT -->
+                <!-- ACCOUNTS -->
                 <div class="row">
+
                     <div class="col">
-                        <label for="main_account_code">Main Account *</label>
-                        <select id="main_account_code" name="main_account_code" required>
+                        <label>Main Account</label>
+                        <select name="account_code" required>
                             <option value="">Select</option>
                             {% for acc in main_accounts %}
                             <option value="{{ acc.account_code }}"
-                                    {% if form_data.main_account_code == acc.account_code or transaction.main_account_code == acc.account_code %}selected{% endif %}>
-                                {{ acc.account_code }} — {{ acc.account_name }}
+                            {% if (form_data and form_data.main_account_code==acc.account_code)
+                            or (transaction and transaction.main_account_code==acc.account_code) %}selected{% endif %}>
+                                {{ acc.account_code }} - {{ acc.account_name }}
                             </option>
                             {% endfor %}
                         </select>
                     </div>
+
                     <div class="col">
-                        <label for="sub_account_code">Sub Account</label>
-                        <select id="sub_account_code" name="sub_account_code">
+                        <label>Sub Account</label>
+                        <select name="sub_account_code">
                             <option value="">None</option>
                             {% for sub in subaccounts %}
                             <option value="{{ sub.sub_account_code }}"
-                                    {% if form_data.sub_account_code == sub.sub_account_code or transaction.sub_account_code == sub.sub_account_code %}selected{% endif %}>
-                                {{ sub.sub_account_code }} — {{ sub.sub_account_name }}
+                            {% if (form_data and form_data.sub_account_code==sub.sub_account_code)
+                            or (transaction and transaction.sub_account_code==sub.sub_account_code) %}selected{% endif %}>
+                                {{ sub.sub_account_code }} - {{ sub.sub_account_name }}
                             </option>
                             {% endfor %}
                         </select>
                     </div>
+
                 </div>
 
                 <div class="divider"></div>
 
                 <!-- WHT -->
-                <div class="row form-check">
-                    <input type="checkbox" id="wht_applied" name="wht_applied"
-                           {% if form_data.wht_applied == 'on' or transaction.wht_applied %}checked{% endif %}>
-                    <label for="wht_applied">Apply Withholding Tax (WHT)</label>
+                <div class="row">
+                    <div class="col">
+                        <label>
+                            <input type="checkbox" id="wht_applied" name="wht_applied"
+                            {% if form_data and form_data.wht_applied=='on' %}checked{% endif %}>
+                            Apply WHT
+                        </label>
+                    </div>
                 </div>
 
-                <div id="wht_fields" style="display: {% if form_data.wht_applied == 'on' or transaction.wht_applied %}block{% else %}none{% endif %};">
+                <div id="wht_fields" style="display:none;">
                     <div class="row">
                         <div class="col">
-                            <label for="wht_rate">WHT Rate (%)</label>
-                            <input type="number" step="0.01" min="0" max="100" id="wht_rate" name="wht_rate"
-                                   value="{{ form_data.wht_rate or (transaction.wht_rate * 100)|round(2) if transaction.wht_rate else '0.00' }}">
+                            <label>WHT Rate (%)</label>
+                            <input type="number" id="wht_rate" name="wht_rate"
+                            value="{{ form_data.wht_rate if form_data else '0' }}">
                         </div>
                         <div class="col">
                             <label>WHT Amount</label>
@@ -142,46 +156,49 @@
                 <!-- ACTIONS -->
                 <div class="actions">
                     <button type="submit" class="btn btn-primary">
-                        {% if is_edit %}💾 Update Transaction{% else %}💾 Save Transaction{% endif %}
+                        {% if is_edit %}Update{% else %}Save{% endif %}
                     </button>
-                    <a href="/transactions-page" class="btn btn-danger">⬅ Cancel</a>
+                    <a href="/transactions-page" class="btn btn-danger">Cancel</a>
                 </div>
+
             </form>
+
         </div>
     </div>
 </div>
 
-<!-- Your existing JavaScript – unchanged -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const whtCheckbox = document.getElementById('wht_applied');
-    const whtFields = document.getElementById('wht_fields');
-    const amountInput = document.getElementById('gross_amount');
-    const whtRateInput = document.getElementById('wht_rate');
-    const whtDisplay = document.getElementById('wht_amount_display');
+document.addEventListener("DOMContentLoaded", function(){
 
-    function toggleWHT() {
-        whtFields.style.display = whtCheckbox.checked ? 'block' : 'none';
-        calculateWHT();
+    const whtCheckbox = document.getElementById("wht_applied");
+    const whtFields = document.getElementById("wht_fields");
+    const amountInput = document.querySelector("[name='amount']");
+    const rateInput = document.getElementById("wht_rate");
+    const display = document.getElementById("wht_amount_display");
+
+    function toggle(){
+        whtFields.style.display = whtCheckbox.checked ? "block" : "none";
+        calculate();
     }
 
-    function calculateWHT() {
-        if (!whtCheckbox.checked) {
-            whtDisplay.value = '₦0.00';
+    function calculate(){
+        if(!whtCheckbox.checked){
+            display.value = "₦0.00";
             return;
         }
-        const amount = parseFloat(amountInput.value) || 0;
-        const rate = parseFloat(whtRateInput.value) || 0;
-        const wht = amount * (rate / 100);
-        whtDisplay.value = '₦' + wht.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        let amt = parseFloat(amountInput.value)||0;
+        let rate = parseFloat(rateInput.value)||0;
+        let wht = amt * rate/100;
+        display.value = "₦"+wht.toLocaleString();
     }
 
-    whtCheckbox.addEventListener('change', toggleWHT);
-    amountInput.addEventListener('input', calculateWHT);
-    whtRateInput.addEventListener('input', calculateWHT);
-    
-    toggleWHT(); // initialize
+    whtCheckbox.addEventListener("change", toggle);
+    amountInput.addEventListener("input", calculate);
+    rateInput.addEventListener("input", calculate);
+
+    toggle();
 });
 </script>
+
 </body>
 </html>

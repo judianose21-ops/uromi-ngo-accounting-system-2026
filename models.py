@@ -1,26 +1,31 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, Date
-from database import Base
+from django.db import models
 
-class Account(Base):
-    __tablename__ = "accounts"
+class Transaction(models.Model):
+    TRANSACTION_TYPES = [
+        ('donation', 'Donation'),
+        ('expense', 'Expense'),
+        ('income', 'Income'),
+        ('transfer', 'Transfer'),
+    ]
 
-    id = Column(Integer, primary_key=True)
-    code = Column(String)
-    name = Column(String)
-    type = Column(String)
+    date = models.DateField()
+    pv_number = models.CharField(max_length=100, blank=True, null=True)
+    description = models.TextField()
+    transaction_type = models.CharField(max_length=50, choices=TRANSACTION_TYPES)
+    gross_amount = models.DecimalField(max_digits=15, decimal_places=2)
 
-class Transaction(Base):
-    __tablename__ = "transactions"
+    month = models.CharField(max_length=20, blank=True, null=True)
 
-    id = Column(Integer, primary_key=True)
-    date = Column(Date)
-    description = Column(String)
+    project = models.ForeignKey('Project', on_delete=models.SET_NULL, blank=True, null=True)
+    vendor_tin = models.CharField(max_length=100, blank=True, null=True)
+    vendor_account_details = models.CharField(max_length=255, blank=True, null=True)
 
-class TransactionLine(Base):
-    __tablename__ = "transaction_lines"
+    main_account = models.ForeignKey('ChartOfAccount', related_name='main_transactions', on_delete=models.SET_NULL, null=True)
+    sub_account = models.ForeignKey('ChartOfAccount', related_name='sub_transactions', on_delete=models.SET_NULL, blank=True, null=True)
 
-    id = Column(Integer, primary_key=True)
-    transaction_id = Column(Integer, ForeignKey("transactions.id"))
-    account_id = Column(Integer, ForeignKey("accounts.id"))
-    debit = Column(Float)
-    credit = Column(Float)
+    deduct_wht = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.date} - {self.description}"

@@ -1,85 +1,289 @@
-from fastapi import HTTPException, Request
-from fastapi.responses import HTMLResponse
-import traceback
-
-@app.get("/voucher/{transaction_id}", response_class=HTMLResponse)
-async def view_voucher(transaction_id: int, request: Request):
-    try:
-        with get_db() as conn:
-            row = conn.execute("""
-                SELECT
-                    id,
-                    date,
-                    pv_number,
-                    reference,
-                    description,
-                    type,
-                    amount,
-                    wht_applied,
-                    wht_rate,
-                    project,
-                    main_account,
-                    main_account_code,
-                    sub_account,
-                    sub_account_code
-                FROM transactions
-                WHERE id = ?
-            """, (transaction_id,)).fetchone()
-
-            if not row:
-                raise HTTPException(status_code=404, detail="Transaction not found")
-
-            tx = dict(row)
-
-        gross_amount = safe_float(tx.get("amount", 0))
-        wht_applied = bool(safe_float(tx.get("wht_applied", 0)))
-        wht_rate = safe_float(tx.get("wht_rate", 0.0))
-        wht_amount = gross_amount * wht_rate if wht_applied else 0.0
-        net_amount = gross_amount - wht_amount
-
-        gross_str = f"₦{gross_amount:,.2f}"
-        wht_str = f"₦{wht_amount:,.2f}" if wht_applied and wht_amount > 0 else "₦0.00"
-        net_str = f"₦{net_amount:,.2f}"
-
-        amount_in_words = number_to_ngn_words(net_amount)
-
-        payee = tx.get("reference") or tx.get("payee") or "Not specified"
-        payee_tin = tx.get("payee_tin") or tx.get("vendor_tin") or "—"
-
-        context = {
-            "request": request,
-            "tx": tx,
-            "organization": "CARE INTERNATIONAL",
-            "voucher_title": "PAYMENT VOUCHER" if tx.get("type") == "Expense" else "RECEIPT VOUCHER",
-            "pv_number": tx.get("pv_number") or f"PV-{tx['id']:04d}",
-            "date": tx.get("date", "—"),
-            "description": tx.get("description", "—"),
-            "project": tx.get("project", "—"),
-            "payee": payee,
-            "payee_tin": payee_tin,
-            "main_account_code": tx.get("main_account_code", "—"),
-            "main_account": tx.get("main_account", "—"),
-            "sub_account_code": tx.get("sub_account_code", "—"),
-            "sub_account": tx.get("sub_account", "—"),
-            "gross_amount_formatted": gross_str,
-            "wht_applied": wht_applied,
-            "wht_rate_percent": f"{wht_rate * 100:.1f}" if wht_applied else "0.0",
-            "wht_amount_formatted": wht_str,
-            "net_amount_formatted": net_str,
-            "net_amount_in_words": amount_in_words,
-            "prepared_by": "Jude Oko-Oboh",
-            "approved_by": "Abba Umar",
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ voucher_title|default("Payment Voucher") }} - {{ pv_number }}</title>
+    <style>
+        @media print {
+            .no-print, .print-controls, .print-btn { display: none !important; }
+            body { margin: 0; font-size: 10pt; background: white; }
+            @page { margin: 1.5cm; }
+            .page { border: none; box-shadow: none; margin: 0; }
+            .document { padding: 35px 45px; }
         }
 
-        response = templates.TemplateResponse("payment-voucher-print.html", context)
-        response.headers["Content-Disposition"] = f'inline; filename="voucher-{context["pv_number"]}.html"'
-        return response
+        body {
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #1a1a1a;
+            background: #f9f9f9;
+            font-size: 13.5px;
+            line-height: 1.45;
+        }
 
-    except HTTPException:
-        raise
-    except Exception as e:
-        traceback.print_exc()
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to load voucher: {str(e)}"
-        )
+        .page {
+            max-width: 950px;
+            margin: 30px auto;
+            background: white;
+            border: 1px solid #d0d0d0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .print-controls {
+            text-align: right;
+            padding: 15px 50px 0;
+        }
+
+        .print-btn {
+            padding: 9px 22px;
+            background: #006633;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .print-btn:hover {
+            background: #004d26;
+        }
+
+        .document {
+            padding: 40px 50px;
+        }
+
+        .logo {
+            margin-bottom: 15px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+            border-bottom: 2px solid #006633;
+            padding-bottom: 18px;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-text {
+            font-size: 26px;
+            font-weight: 700;
+            color: #006633;
+            letter-spacing: 0.5px;
+        }
+
+        .voucher-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a1a1a;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            font-weight: 600;
+        }
+
+        .info-row div {
+            min-width: 48%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 28px 0 32px;
+        }
+
+        th, td {
+            border: 1px solid #444;
+            padding: 10px 12px;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        th {
+            background: #f5f5f5;
+            font-weight: 700;
+            color: #222;
+        }
+
+        .amount-cell {
+            text-align: right;
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .account-cell {
+            font-size: 13.5px;
+        }
+
+        .amount-words {
+            font-style: italic;
+            margin: 20px 0 40px;
+            padding-left: 12px;
+            border-left: 3px solid #006633;
+            font-size: 14px;
+        }
+
+        .signatures {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 60px;
+            margin-top: 70px;
+        }
+
+        .signature-block {
+            text-align: center;
+        }
+
+        .sign-line {
+            border-top: 1px solid #333;
+            margin: 50px auto 12px;
+            width: 80%;
+        }
+
+        .role {
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .name {
+            margin: 8px 0 4px;
+            font-weight: 500;
+        }
+
+        .footer-note {
+            margin-top: 50px;
+            font-size: 11.5px;
+            color: #444;
+            text-align: center;
+            line-height: 1.6;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="print-controls">
+        <button class="print-btn" onclick="window.print()">🖨️ Print Voucher</button>
+    </div>
+
+    <div class="document">
+        <div class="logo">
+            <img src="/static/logo.png" alt="CARE Initiative Logo" width="100">
+        </div>
+
+        <div class="header">
+            <div class="logo-container">
+                <div class="logo-text">CARE Initiative</div>
+            </div>
+            <div class="voucher-title">{{ voucher_title|default("PAYMENT VOUCHER") }}</div>
+        </div>
+
+        <div class="info-row">
+            <div>
+                <strong>Voucher Number:</strong> {{ pv_number }}<br>
+                <small>(Project Number: {{ project|default("—") }})</small>
+            </div>
+            <div style="text-align: right;">
+                <strong>Transaction Date:</strong> {{ date|default(tx.date|default('—')) }}
+            </div>
+        </div>
+
+        <table>
+            <tr>
+                <th style="width:45%">Account Code & Name</th>
+<th style="width:20%">Amount (₦)</th>
+<th style="width:35%">Description</th>>
+            </tr>
+
+            <tr>
+                <td class="account-cell">
+                    <strong>{{ main_account_code|default(tx.main_account_code|default('—')) }}</strong>
+                    {% if main_account or tx.main_account %}
+                        — {{ main_account|default(tx.main_account|default('—')) }}
+                    {% endif %}
+                </td>
+                <td class="amount-cell" rowspan="{% if sub_account_code or tx.sub_account_code %}4{% else %}3{% endif %}">
+                    {{ gross_amount_formatted|default("₦0.00") }}
+                </td>
+                <td rowspan="{% if sub_account_code or tx.sub_account_code %}4{% else %}3{% endif %}">
+                    {{ description|default(tx.description|default('—')) }}
+                </td>
+            </tr>
+
+            {% if sub_account_code or tx.sub_account_code %}
+            <tr>
+                <td class="account-cell">
+                    <strong>{{ sub_account_code|default(tx.sub_account_code|default('—')) }}</strong>
+                    {% if sub_account or tx.sub_account %}
+                        — {{ sub_account|default(tx.sub_account|default('—')) }}
+                    {% endif %}
+                </td>
+            </tr>
+            {% endif %}
+
+            <tr>
+                <td><strong>Payee / Vendor:</strong> {{ payee|default('—') }}</td>
+            </tr>
+
+            <tr>
+                <td><strong>Payee TIN:</strong> {{ payee_tin|default('—') }}</td>
+            </tr>
+
+            {% if wht_applied and wht_amount > 0 %}
+            <tr>
+                <td><strong>WHT ({{ wht_rate_percent }}%)</strong></td>
+                <td class="amount-cell">{{ wht_amount_formatted|default("₦0.00") }}</td>
+                <td>Withholding Tax Deduction</td>
+            </tr>
+            <tr>
+                <td><strong>Net Amount Payable</strong></td>
+                <td class="amount-cell">{{ net_amount_formatted|default("₦0.00") }}</td>
+                <td>Amount after WHT deduction</td>
+            </tr>
+            {% endif %}
+        </table>
+
+        <div class="amount-words">
+            <strong>Amount in words:</strong> {{ net_amount_in_words|default("Amount not calculated") }}
+        </div>
+
+        <div class="signatures">
+            <div class="signature-block">
+                <div class="sign-line"></div>
+                <div class="role">Prepared by</div>
+                <div class="name">{{ prepared_by|default("Jude Oko-Oboh") }}</div>
+                <div>Finance Manager / Authorized Signatory</div>
+                <div>Date: ________________</div>
+            </div>
+
+            <div class="signature-block">
+                <div class="sign-line"></div>
+                <div class="role">Approved by</div>
+                <div class="name">{{ approved_by|default("Abba Umar") }}</div>
+                <div>Executive Director / Authorized Signatory</div>
+                <div>Date: ________________</div>
+            </div>
+        </div>
+
+        <div class="footer-note">
+            Authorize that this cost can be charged to the project, account and resource number.<br>
+            Finance supporting documents and signatures are according to the authorization table;<br>
+            that the procurement and donor procedures have been followed.
+        </div>
+    </div>
+</div>
+</body>
+</html>

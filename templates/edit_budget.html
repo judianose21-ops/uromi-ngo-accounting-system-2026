@@ -2,37 +2,88 @@
 
 <form method="post" action="/update-budget">
 
-<input type="hidden" name="id" value="{{budget.id}}">
+<input type="hidden" name="id" value="{{ form_data.id }}">
 
+<!-- ACCOUNT CODE -->
 <label>Account Code</label>
-<input type="text" name="account_code" value="{{budget.account_code}}">
+<select name="account_code" id="account_code" onchange="setAccountName()">
 
+    {% for acc in main_accounts %}
+        <option
+            value="{{ acc.code }}"
+            data-name="{{ acc.name }}"
+            {% if form_data.account_code == acc.code %}selected{% endif %}
+        >
+            {{ acc.code }} - {{ acc.name }}
+        </option>
+    {% endfor %}
+
+</select>
+
+<!-- HIDDEN ACCOUNT NAME (AUTO FILLED) -->
+<input type="hidden" name="account_name" id="account_name">
+
+<!-- DISPLAY ACCOUNT NAME -->
 <label>Account Name</label>
-<input type="text" name="account_name" value="{{budget.account_name}}">
+<input type="text" id="account_name_display"
+       value="{{ form_data.account_name }}"
+       readonly>
 
+
+<!-- SUB ACCOUNT CODE -->
 <label>Sub Account Code</label>
-<input type="text" name="subaccount_code" value="{{budget.subaccount_code}}">
+<input type="text" name="subaccount_code"
+       value="{{ form_data.subaccount_code or '' }}">
 
+
+<!-- SUB ACCOUNT NAME -->
 <label>Sub Account Name</label>
-<input type="text" name="subaccount_name" value="{{budget.subaccount_name}}">
+<input type="text" name="subaccount_name"
+       value="{{ form_data.subaccount_name or '' }}">
+
 
 <label>Detail</label>
-<input type="text" name="detail" value="{{budget.detail}}">
+<input type="text" name="detail"
+       value="{{ form_data.detail }}">
+
 
 <label>Quantity</label>
-<input type="number" name="quantity" value="{{budget.quantity}}">
+<input type="number" step="any" name="quantity"
+       value="{{ form_data.quantity }}">
+
 
 <label>Unit Cost</label>
-<input type="number" name="unit_cost" value="{{budget.unit_cost}}">
+<input type="number" step="any" name="unit_cost"
+       value="{{ form_data.unit_cost }}">
+
 
 <label>Periods</label>
-<input type="number" name="periods" value="{{budget.periods}}">
+<input type="number" name="periods"
+       value="{{ form_data.periods }}">
+
 
 <label>Total</label>
-<input type="number" name="total" value="{{budget.total}}">
+<input type="number" value="{{ form_data.total }}" readonly>
 
 <br><br>
 
 <button type="submit">Update Budget</button>
 
 </form>
+
+
+<script>
+function setAccountName() {
+    const select = document.getElementById("account_code");
+    const name = select.options[select.selectedIndex].dataset.name;
+
+    // hidden field sent to FastAPI
+    document.getElementById("account_name").value = name;
+
+    // visible display field
+    document.getElementById("account_name_display").value = name;
+}
+
+// auto-run when page loads (important for edit mode)
+window.onload = setAccountName;
+</script>

@@ -1,218 +1,220 @@
 <!DOCTYPE html>
-
-<html>
-
+<html lang="en">
 <head>
+<meta charset="UTF-8">
 <title>Trial Balance</title>
 
 <style>
-
-body{
-font-family:Arial;
-margin:0;
-background:#f4f6f9;
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f4f6f9;
+    margin: 0;
 }
 
-/* Top header */
-
-.header{
-background:#1e293b;
-color:white;
-padding:15px 30px;
-font-size:20px;
+.container {
+    width: 95%;
+    margin: 20px auto;
+    background: #fff;
+    padding: 20px 25px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    border-radius: 8px;
 }
 
-/* Container */
-
-.container{
-padding:30px;
+/* HEADER */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
-/* Card */
-
-.card{
-background:white;
-padding:20px;
-border-radius:8px;
-box-shadow:0 2px 5px rgba(0,0,0,0.1);
+.logo {
+    height: 60px;
 }
 
-/* Report Header */
-
-.report-header{
-display:flex;
-align-items:center;
-justify-content:space-between;
-margin-bottom:20px;
-border-bottom:2px solid #ddd;
-padding-bottom:10px;
+.title {
+    text-align: center;
+    flex-grow: 1;
 }
 
-.logo{
-width:70px;
+.title h2 {
+    margin: 0;
+    color: #006633;
 }
 
-.logo img{
-width:70px;
+.title p {
+    margin: 2px 0;
+    font-size: 13px;
+    color: #555;
 }
 
-.org-title{
-text-align:center;
-flex:1;
+/* FILTER */
+.filter {
+    margin: 15px 0;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
-.org-title h2{
-margin:0;
+.filter input, .filter select {
+    padding: 6px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
 }
 
-.report-info{
-text-align:right;
-font-size:13px;
+.filter button {
+    background: #006633;
+    color: #fff;
+    border: none;
+    padding: 7px 12px;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
-/* Print Button */
-
-.print-bar{
-margin-bottom:15px;
+/* TABLE */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
 }
 
-button{
-padding:8px 14px;
-background:#1e293b;
-color:white;
-border:none;
-border-radius:4px;
-cursor:pointer;
+th, td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #ddd;
 }
 
-button:hover{
-background:#334155;
+th {
+    background: #006633;
+    color: white;
+    text-align: left;
+    font-size: 13px;
 }
 
-/* Table */
-
-table{
-width:100%;
-border-collapse:collapse;
+td {
+    font-size: 13px;
 }
 
-th,td{
-padding:10px;
-border-bottom:1px solid #ddd;
-text-align:left;
+.amount {
+    text-align: right;
+    font-weight: 500;
 }
 
-th{
-background:#1e293b;
-color:white;
+/* ROW STYLING */
+tbody tr:hover {
+    background: #f9f9f9;
 }
 
-tr:hover{
-background:#f1f5f9;
+/* TOTAL */
+tfoot {
+    background: #f1f1f1;
+    font-weight: bold;
 }
 
-/* PRINT STYLE */
-
-@media print{
-
-.header{
-display:none;
+tfoot td {
+    border-top: 2px solid #000;
 }
 
-button{
-display:none;
+/* DIFFERENCE */
+.difference {
+    margin-top: 10px;
+    text-align: right;
+    font-weight: bold;
+    color: #c0392b;
 }
 
-body{
-background:white;
+/* PRINT */
+@media print {
+    body {
+        background: white;
+    }
+    .filter {
+        display: none;
+    }
+    .container {
+        box-shadow: none;
+        width: 100%;
+    }
 }
-
-.container{
-padding:0;
-}
-
-.card{
-box-shadow:none;
-border:none;
-}
-
-}
-
 </style>
-
 </head>
 
 <body>
 
-<div class="header">
-NGO Accounting System
-</div>
-
 <div class="container">
 
-<div class="card">
+    <!-- HEADER -->
+    <div class="header">
+        <img src="/static/logo.png" class="logo">
 
-<div class="print-bar">
-<button onclick="printReport()">Print Report</button>
+        <div class="title">
+            <h2>CARE INTERNATIONAL</h2>
+            <p>Trial Balance Report</p>
+            <p>
+                {{ start_date or 'All Dates' }} 
+                to 
+                {{ end_date or 'All Dates' }}
+                | Project: {{ project or 'All' }}
+            </p>
+        </div>
+
+        <div></div>
+    </div>
+
+    <!-- FILTER -->
+    <form method="get" class="filter">
+        <input type="date" name="start_date" value="{{ start_date }}">
+        <input type="date" name="end_date" value="{{ end_date }}">
+        
+        <input type="text" name="project" placeholder="Project" value="{{ project }}">
+        
+        <button type="submit">Filter</button>
+    </form>
+
+    <!-- TABLE -->
+    <table>
+        <thead>
+            <tr>
+                <th>Account Code</th>
+                <th>Account Name</th>
+                <th>Sub Account</th>
+                <th class="amount">Debit (₦)</th>
+                <th class="amount">Credit (₦)</th>
+                <th class="amount">Net Debit</th>
+                <th class="amount">Net Credit</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for acc in accounts %}
+            <tr>
+                <td>{{ acc.account_code }}</td>
+                <td>{{ acc.account_name }}</td>
+                <td>{{ acc.sub_account }}</td>
+                <td class="amount">{{ "{:,.2f}".format(acc.debit) }}</td>
+                <td class="amount">{{ "{:,.2f}".format(acc.credit) }}</td>
+                <td class="amount">{{ "{:,.2f}".format(acc.net_debit) }}</td>
+                <td class="amount">{{ "{:,.2f}".format(acc.net_credit) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+
+        <tfoot>
+            <tr>
+                <td colspan="3">TOTAL</td>
+                <td class="amount">{{ "{:,.2f}".format(total_debit) }}</td>
+                <td class="amount">{{ "{:,.2f}".format(total_credit) }}</td>
+                <td colspan="2"></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="difference">
+        Difference: ₦ {{ "{:,.2f}".format(difference) }}
+    </div>
+
 </div>
-
-<div class="report-header">
-
-<div class="logo">
-<img src="/static/logo.png">
-</div>
-
-<div class="org-title">
-<h2>UROMI NGO</h2>
-<div>Trial Balance Report</div>
-</div>
-
-<div class="report-info">
-Printed: <span id="printDate"></span>
-</div>
-
-</div>
-
-<table>
-
-<thead>
-<tr>
-<th>Account</th>
-<th>Debit</th>
-<th>Credit</th>
-</tr>
-</thead>
-
-<tbody>
-
-{% for r in rows %}
-
-<tr>
-<td>{{r.account}}</td>
-<td>{{r.debit}}</td>
-<td>{{r.credit}}</td>
-</tr>
-
-{% endfor %}
-
-</tbody>
-
-</table>
-
-</div>
-
-</div>
-
-<script>
-
-function printReport(){
-window.print();
-}
-
-const today = new Date();
-document.getElementById("printDate").innerText = today.toLocaleDateString();
-
-</script>
 
 </body>
 </html>

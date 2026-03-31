@@ -143,13 +143,26 @@
                     <tbody>
                     {% for acc in main_accounts %}
                         <!-- MAIN ACCOUNT -->
-                        <tr class="table-active">
-                            <td class="fw-bold">{{ acc.account_code }}</td>
-                            <td class="fw-semibold">{{ acc.account_name }}</td>
+                        <tr class="table-active account-row" data-account-code="{{ acc.account_code }}" style="cursor: pointer;">
+                            <td class="fw-bold">
+                                <a href="#account-{{ acc.account_code }}" class="text-dark text-decoration-none account-link" 
+                                   title="Click to view account details">
+                                    {{ acc.account_code }}
+                                </a>
+                            </td>
+                            <td class="fw-semibold">
+                                <a href="#account-{{ acc.account_code }}" class="text-dark text-decoration-none account-link"
+                                   title="Click to view account details">
+                                    {{ acc.account_name }}
+                                </a>
+                            </td>
                             <td><span class="badge bg-primary fs-6">{{ acc.account_type }}</span></td>
                             <td>{{ acc.description or '<span class="text-muted">—</span>' }}</td>
-                            <td class="text-center">
+                            <td class="text-center" onclick="event.stopPropagation();">
                                 <div class="btn-group btn-group-sm">
+                                    <a href="#account-{{ acc.account_code }}" class="btn btn-outline-info" title="View account">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
                                     <a href="#" class="btn btn-outline-secondary" title="Edit (coming soon)">
                                         <i class="bi bi-pencil"></i>
                                     </a>
@@ -168,13 +181,26 @@
                         {% set has_sub = namespace(found=false) %}
                         {% for sub in subaccounts if sub.parent_account_code == acc.account_code %}
                             {% set has_sub.found = true %}
-                            <tr class="sub-row">
-                                <td>{{ sub.sub_account_code }}</td>
-                                <td class="ps-4 text-muted">↳ {{ sub.sub_account_name }}</td>
+                            <tr class="sub-row sub-account-row" data-parent-code="{{ acc.account_code }}" data-sub-code="{{ sub.sub_account_code }}" style="cursor: pointer;">
+                                <td>
+                                    <a href="#subaccount-{{ sub.sub_account_code }}" class="text-dark text-decoration-none"
+                                       title="Click to view sub-account details">
+                                        {{ sub.sub_account_code }}
+                                    </a>
+                                </td>
+                                <td class="ps-4 text-muted">
+                                    <a href="#subaccount-{{ sub.sub_account_code }}" class="text-muted text-decoration-none"
+                                       title="Click to view sub-account details">
+                                        ↳ {{ sub.sub_account_name }}
+                                    </a>
+                                </td>
                                 <td><span class="badge bg-secondary fs-6">Sub</span></td>
                                 <td>{{ sub.description or '<span class="text-muted">—</span>' }}</td>
-                                <td class="text-center">
+                                <td class="text-center" onclick="event.stopPropagation();">
                                     <div class="btn-group btn-group-sm">
+                                        <a href="#subaccount-{{ sub.sub_account_code }}" class="btn btn-outline-info" title="View sub-account">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
                                         <a href="#" class="btn btn-outline-secondary" title="Edit (coming soon)">
                                             <i class="bi bi-pencil"></i>
                                         </a>
@@ -215,14 +241,75 @@
 </div>
 
 <style>
+    /* Main account rows */
+    .account-row {
+        transition: all 0.3s ease;
+    }
+    
+    .account-row:hover {
+        background-color: rgba(0,123,255,0.15) !important;
+        transform: scale(1.01);
+    }
+    
+    /* Sub-account rows */
     .sub-row {
         background-color: rgba(0,0,0,0.02);
+        transition: all 0.3s ease;
     }
+    
     .sub-row:hover {
-        background-color: rgba(0,123,255,0.08) !important;
+        background-color: rgba(0,123,255,0.12) !important;
+        transform: scale(1.005);
     }
+    
+    /* Account links */
+    .account-link {
+        transition: color 0.2s ease;
+    }
+    
+    .account-link:hover {
+        color: #0d6efd !important;
+        text-decoration: underline !important;
+    }
+    
+    /* Hover effect for rows */
     tr.table-active:hover {
         background-color: rgba(0,0,0,0.05) !important;
     }
+    
+    /* Action buttons visibility */
+    .btn-group-sm {
+        white-space: nowrap;
+    }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Make account rows clickable
+        const accountRows = document.querySelectorAll('.account-row');
+        accountRows.forEach(row => {
+            row.addEventListener('click', function(e) {
+                if (e.target.closest('.btn') || e.target.closest('form')) return;
+                const accountCode = this.getAttribute('data-account-code');
+                const link = this.querySelector('.account-link');
+                if (link) {
+                    link.click();
+                }
+            });
+        });
+        
+        // Make sub-account rows clickable
+        const subRows = document.querySelectorAll('.sub-account-row');
+        subRows.forEach(row => {
+            row.addEventListener('click', function(e) {
+                if (e.target.closest('.btn') || e.target.closest('form')) return;
+                const subCode = this.getAttribute('data-sub-code');
+                const links = this.querySelectorAll('a');
+                if (links.length > 0) {
+                    links[0].click();
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}

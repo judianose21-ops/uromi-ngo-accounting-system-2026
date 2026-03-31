@@ -20,12 +20,12 @@ font-size:20px;
 }
 
 .container{
-padding:30px;
+padding:25px;
 }
 
 .card{
 background:white;
-padding:20px;
+padding:18px;
 border-radius:8px;
 box-shadow:0 2px 5px rgba(0,0,0,0.1);
 }
@@ -36,11 +36,11 @@ box-shadow:0 2px 5px rgba(0,0,0,0.1);
 display:flex;
 align-items:center;
 justify-content:space-between;
-margin-bottom:20px;
+margin-bottom:15px;
 }
 
 .logo img{
-height:60px;
+height:45px;
 }
 
 .report-title{
@@ -53,23 +53,39 @@ margin:0;
 }
 
 .report-info{
-font-size:13px;
+font-size:12px;
 text-align:right;
+}
+
+/* FILTER BAR */
+
+.filter-bar{
+margin-bottom:15px;
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+}
+
+.filter-bar input{
+padding:6px;
+border:1px solid #ccc;
+border-radius:4px;
 }
 
 /* BUTTON */
 
 .print-bar{
-margin-bottom:15px;
+margin-bottom:10px;
 }
 
 button{
-padding:8px 14px;
+padding:7px 12px;
 background:#1e293b;
 color:white;
 border:none;
 border-radius:4px;
 cursor:pointer;
+font-size:13px;
 }
 
 button:hover{
@@ -81,10 +97,11 @@ background:#334155;
 table{
 width:100%;
 border-collapse:collapse;
+font-size:13px;
 }
 
 th,td{
-padding:10px;
+padding:7px;
 border-bottom:1px solid #ddd;
 text-align:left;
 }
@@ -102,14 +119,19 @@ background:#f1f5f9;
 font-weight:bold;
 }
 
+tfoot td{
+border-top:2px solid #000;
+font-weight:bold;
+background:#f1f5f9;
+}
+
 /* PRINT STYLES */
 
 @media print {
 
-.header{
-display:none;
-}
-
+.header,
+.filter-bar,
+.print-bar,
 button{
 display:none;
 }
@@ -129,8 +151,8 @@ border:none;
 
 .report-header{
 border-bottom:2px solid #000;
-padding-bottom:10px;
-margin-bottom:20px;
+padding-bottom:8px;
+margin-bottom:15px;
 }
 
 footer{
@@ -139,7 +161,7 @@ bottom:0;
 left:0;
 right:0;
 text-align:center;
-font-size:12px;
+font-size:11px;
 }
 
 }
@@ -158,6 +180,15 @@ UROMI NGO Accounting – General Ledger
 
 <div class="card">
 
+<!-- FILTERS -->
+<form method="get" class="filter-bar">
+    <input type="date" name="start_date">
+    <input type="date" name="end_date">
+    <input type="text" name="project" placeholder="Project">
+    <button type="submit">Filter</button>
+</form>
+
+<!-- PRINT BUTTON -->
 <div class="print-bar">
 <button onclick="printLedger()">Print Ledger</button>
 </div>
@@ -184,6 +215,7 @@ Printed: <span id="printDate"></span>
 <thead>
 <tr>
 <th>Date</th>
+<th>PV No</th>
 <th>Description</th>
 <th>Account</th>
 <th>Sub Account</th>
@@ -195,21 +227,31 @@ Printed: <span id="printDate"></span>
 
 <tbody>
 
-{% for l in ledger %}
+{% for tx in transactions %}
 
 <tr>
-<td>{{l.date}}</td>
-<td>{{l.description}}</td>
-<td>{{l.account}}</td>
-<td>{{l.sub_account}}</td>
-<td>{{l.debit}}</td>
-<td>{{l.credit}}</td>
-<td class="balance">{{l.balance}}</td>
+<td>{{ tx.date }}</td>
+<td>{{ tx.pv }}</td>
+<td>{{ tx.description }}</td>
+<td>{{ tx.account }}</td>
+<td>{{ tx.sub_account }}</td>
+<td>{{ "{:,.2f}".format(tx.debit) if tx.debit else "-" }}</td>
+<td>{{ "{:,.2f}".format(tx.credit) if tx.credit else "-" }}</td>
+<td class="balance">{{ "{:,.2f}".format(tx.balance) }}</td>
 </tr>
 
 {% endfor %}
 
 </tbody>
+
+<tfoot>
+<tr>
+<td colspan="5">TOTAL</td>
+<td>{{ "{:,.2f}".format(total_debit) }}</td>
+<td>{{ "{:,.2f}".format(total_credit) }}</td>
+<td>{{ "{:,.2f}".format(closing_balance) }}</td>
+</tr>
+</tfoot>
 
 </table>
 

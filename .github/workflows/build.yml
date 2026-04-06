@@ -16,19 +16,43 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.9'
+        python-version: '3.14'
 
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
+        python -m pip install --upgrade pip setuptools wheel
         python -m pip install -r requirements.txt pyinstaller==6.19.0
 
     - name: Build EXE
       run: |
         pyinstaller --clean --log-level=DEBUG UROMI.spec
 
-    - name: Upload EXE
+    - name: Upload EXE artifact
       uses: actions/upload-artifact@v4
       with:
         name: ngo-accounting-exe
         path: dist/UROMI.exe
+
+    - name: Create GitHub Release
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      uses: actions/create-release@v1
+      id: create_release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ github.run_number }}
+        release_name: Release v${{ github.run_number }}
+        body: 'Automated build release for UROMI executable.'
+        draft: false
+        prerelease: false
+
+    - name: Upload release asset
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: dist/UROMI.exe
+        asset_name: UROMI.exe
+        asset_content_type: application/octet-stream

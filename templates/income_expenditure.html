@@ -1,404 +1,247 @@
-<!DOCTYPE html>
-<html>
-
+﻿<!DOCTYPE html>
+<html lang="en">
 <head>
-<title>UROMI NGO - Income & Expenditure Statement</title>
-
-<style>
-
-body{
-font-family:Arial;
-background:#f4f6f9;
-margin:0;
-}
-
-.header{
-background:#1e293b;
-color:white;
-padding:15px 30px;
-font-size:20px;
-}
-
-.container{
-padding:30px;
-}
-
-.card{
-background:white;
-padding:25px;
-border-radius:8px;
-box-shadow:0 2px 6px rgba(0,0,0,0.1);
-max-width:700px;
-margin:auto;
-}
-
-/* REPORT HEADER */
-
-.report-header{
-display:flex;
-align-items:center;
-justify-content:space-between;
-margin-bottom:20px;
-}
-
-.logo img{
-height:60px;
-}
-
-.report-title{
-text-align:center;
-flex-grow:1;
-}
-
-.report-title h2{
-margin:0;
-}
-
-.report-info{
-font-size:13px;
-text-align:right;
-}
-
-/* PRINT BUTTON */
-
-.print-bar{
-margin-bottom:15px;
-text-align:right;
-}
-
-button{
-padding:8px 14px;
-background:#1e293b;
-color:white;
-border:none;
-border-radius:4px;
-cursor:pointer;
-}
-
-button:hover{
-background:#334155;
-}
-
-/* SUMMARY TABLE */
-
-table{
-width:100%;
-border-collapse:collapse;
-margin-top:20px;
-}
-
-th,td{
-padding:12px;
-border-bottom:1px solid #ddd;
-text-align:left;
-}
-
-th{
-background:#1e293b;
-color:white;
-}
-
-.total{
-font-weight:bold;
-font-size:16px;
-}
-
-/* PRINT STYLE */
-
-@media print{
-
-.header{
-display:none;
-}
-
-button{
-display:none;
-}
-
-body{
-background:white;
-}
-
-.container{
-padding:0;
-}
-
-.card{
-box-shadow:none;
-border:none;
-}
-
-.report-header{
-border-bottom:2px solid black;
-padding-bottom:10px;
-margin-bottom:20px;
-}
-
-footer{
-position:fixed;
-bottom:0;
-left:0;
-right:0;
-text-align:center;
-font-size:12px;
-}
-
-}
-
-</style>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Income & Expenditure Statement</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; }
+        .page-wrapper { background: white; min-height: 100vh; }
+        .print-container { max-width: 900px; margin: 0 auto; padding: 40px 30px; }
+        
+        /* Header Section */
+        .report-header { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            border-bottom: 3px solid #1e293b; 
+            padding-bottom: 30px; 
+            margin-bottom: 40px;
+        }
+        .report-logo { flex-shrink: 0; }
+        .report-logo img { max-height: 80px; object-fit: contain; }
+        .report-title { text-align: center; flex: 1; }
+        .report-title h1 { 
+            font-size: 28px; 
+            font-weight: 700; 
+            color: #1e293b; 
+            margin-bottom: 5px; 
+            letter-spacing: 0.5px;
+        }
+        .report-title p { 
+            font-size: 14px; 
+            color: #666; 
+            margin: 0;
+        }
+        .report-info { 
+            text-align: right; 
+            font-size: 12px; 
+            color: #666;
+        }
+        
+        /* Print Bar */
+        .print-bar { text-align: right; margin-bottom: 20px; }
+        button { 
+            padding: 10px 20px; 
+            background: #1e293b; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+        button:hover { background: #334155; }
+        
+        /* Section Headers */
+        .section-header {
+            background: #1e293b;
+            color: white;
+            padding: 12px 15px;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 30px;
+            margin-bottom: 0;
+            border-radius: 4px 4px 0 0;
+        }
+        
+        /* Tables */
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-bottom: 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        th, td { 
+            padding: 12px 15px; 
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        th { 
+            background: #f1f5f9;
+            font-weight: 600;
+            color: #1e293b;
+            text-align: left;
+        }
+        
+        th:last-child,
+        td:last-child { 
+            text-align: right; 
+            font-family: 'Courier New', monospace;
+        }
+        
+        tbody tr:hover { 
+            background: #f8fafc;
+        }
+        
+        /* Subtotal Rows */
+        .subtotal-row {
+            background: #e8f4f8;
+            font-weight: 600;
+            color: #1e293b;
+            border-top: 2px solid #1e293b;
+        }
+        
+        /* Final Total Row */
+        .final-total-row { 
+            background: #1e293b;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+        }
+        
+        .final-total-row td {
+            padding: 15px;
+            border-bottom: none;
+        }
+        
+        /* Summary Section */
+        .summary-box {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8fafc;
+            border-left: 4px solid #1e293b;
+            border-radius: 4px;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        
+        .summary-row:last-child { margin-bottom: 0; }
+        .summary-row strong { color: #1e293b; }
+        
+        /* Footer */
+        footer { 
+            text-align: center; 
+            margin-top: 40px; 
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 12px; 
+            color: #666; 
+        }
+        
+        /* Print Styles */
+        @media print { 
+            body { background: white; }
+            .page-wrapper { background: white; }
+            .print-bar { display: none; }
+            .print-container { padding: 20px; }
+            button { display: none; }
+        }
+    </style>
 </head>
-
 <body>
-
-<div class="header">
-UROMI NGO Accounting – Income & Expenditure
-</div>
-
-<div class="container">
-
-<div class="card">
-
-<div class="print-bar">
-<button onclick="printReport()">Print Report</button>
-</div>
-
-<div class="report-header">
-
-<div class="logo"><!DOCTYPE html>
-
-<html>
-
-<head>
-<title>UROMI NGO - Income & Expenditure Statement</title>
-
-<style>
-
-body{
-font-family:Arial;
-background:#f4f6f9;
-margin:0;
-}
-
-.header{
-background:#1e293b;
-color:white;
-padding:15px 30px;
-font-size:20px;
-}
-
-.container{
-padding:30px;
-}
-
-.card{
-background:white;
-padding:25px;
-border-radius:8px;
-box-shadow:0 2px 6px rgba(0,0,0,0.1);
-max-width:700px;
-margin:auto;
-}
-
-/* REPORT HEADER */
-
-.report-header{
-display:flex;
-align-items:center;
-justify-content:space-between;
-margin-bottom:20px;
-}
-
-.logo img{
-height:60px;
-}
-
-.report-title{
-text-align:center;
-flex-grow:1;
-}
-
-.report-title h2{
-margin:0;
-}
-
-.report-info{
-font-size:13px;
-text-align:right;
-}
-
-/* PRINT BUTTON */
-
-.print-bar{
-margin-bottom:15px;
-text-align:right;
-}
-
-button{
-padding:8px 14px;
-background:#1e293b;
-color:white;
-border:none;
-border-radius:4px;
-cursor:pointer;
-}
-
-button:hover{
-background:#334155;
-}
-
-/* SUMMARY TABLE */
-
-table{
-width:100%;
-border-collapse:collapse;
-margin-top:20px;
-}
-
-th,td{
-padding:12px;
-border-bottom:1px solid #ddd;
-text-align:left;
-}
-
-th{
-background:#1e293b;
-color:white;
-}
-
-.total{
-font-weight:bold;
-font-size:16px;
-}
-
-/* PRINT STYLE */
-
-@media print{
-
-.header{
-display:none;
-}
-
-button{
-display:none;
-}
-
-body{
-background:white;
-}
-
-.container{
-padding:0;
-}
-
-.card{
-box-shadow:none;
-border:none;
-}
-
-.report-header{
-border-bottom:2px solid black;
-padding-bottom:10px;
-margin-bottom:20px;
-}
-
-footer{
-position:fixed;
-bottom:0;
-left:0;
-right:0;
-text-align:center;
-font-size:12px;
-}
-
-}
-
-</style>
-
-</head>
-
-<body>
-
-<div class="header">
-UROMI NGO Accounting – Income & Expenditure
-</div>
-
-<div class="container">
-
-<div class="card">
-
-<div class="print-bar">
-<button onclick="printReport()">Print Report</button>
-</div>
-
-<div class="report-header">
-
-<div class="logo">
-<img src="/static/logo.png" alt="UROMI NGO Logo">
-</div>
-
-<div class="report-title">
-<h2>INCOME & EXPENDITURE STATEMENT</h2>
-<div>UROMI NGO Financial Report</div>
-</div>
-
-<div class="report-info">
-Printed: <span id="printDate"></span>
-</div>
-
-</div>
-
-<table>
-
-<tr>
-<th>Description</th>
-<th>Amount</th>
-</tr>
-
-<tr>
-<td>Total Income</td>
-<td>₦ {{ total_income }}</td>
-</tr>
-
-<tr>
-<td>Total Expenditure</td>
-<td>₦ {{ total_expense }}</td>
-</tr>
-
-<tr class="total">
-<td>Balance (Surplus / Deficit)</td>
-<td>₦ {{ balance }}</td>
-</tr>
-
-</table>
-
-</div>
-
-</div>
-
-<footer>
-UROMI NGO Accounting System
-</footer>
-
-<script>
-
-function printReport(){
-window.print();
-}
-
-const today = new Date();
-const dateField = document.getElementById("printDate");
-
-if(dateField){
-dateField.innerText = today.toLocaleDateString();
-}
-
-</script>
-
+    <div class="page-wrapper">
+        <div class="print-container">
+            <div class="print-bar">
+                <button onclick="printReport()">Print Report</button>
+            </div>
+            
+            <div class="report-header">
+                <div class="report-logo">
+                    <img src="/static/logo.png" alt="CARE Initiative Logo">
+                </div>
+                <div class="report-title">
+                    <h1>INCOME & EXPENDITURE STATEMENT</h1>
+                </div>
+                <div class="report-info">
+                    <div>Printed: <span id="printDate"></span></div>
+                </div>
+            </div>
+
+            <!-- INCOME SECTION -->
+            <div class="section-header">INCOME</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th style="text-align:right;">Amount </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in income_items %}
+                    <tr>
+                        <td>{{ item.account_name }}</td>
+                        <td>{{ "{:,.2f}".format(item.total_income) }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="subtotal-row">
+                        <td><strong>Total Income</strong></td>
+                        <td><strong>{{ "{:,.2f}".format(grand_income) }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- EXPENDITURE SECTION -->
+            <div class="section-header">EXPENDITURE</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th style="text-align:right;">Amount </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in expenditure_items %}
+                    <tr>
+                        <td>{{ item.account_name }}</td>
+                        <td>{{ "{:,.2f}".format(item.total_expenditure) }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="subtotal-row">
+                        <td><strong>Total Expenditure</strong></td>
+                        <td><strong>{{ "{:,.2f}".format(grand_expenditure) }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- SUMMARY -->
+            <table>
+                <tbody>
+                    <tr class="final-total-row">
+                        <td><strong>Balance (Surplus / Deficit)</strong></td>
+                        <td><strong>{{ "{:,.2f}".format(surplus_deficit) }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <footer>CARE Initiative | Financial Statement | {{ "Generated on %s" | format(now) }}</footer>
+        </div>
+    </div>
+    
+    <script>
+        function printReport() { 
+            window.print(); 
+        }
+        document.getElementById('printDate').innerText = new Date().toLocaleDateString();
+    </script>
 </body>
 </html>
-
-<img src="/static/logo.png" alt="UROMI NGO Logo">
-</div>
-
-<div class="report-

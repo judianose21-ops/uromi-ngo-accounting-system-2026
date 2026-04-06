@@ -3,7 +3,7 @@
 <html>
 
 <head>
-<title>UROMI NGO - Balance Sheet</title>
+<title>Sheet</title>
 
 <style>
 
@@ -95,10 +95,20 @@ padding:10px;
 border-bottom:1px solid #ddd;
 }
 
+th:nth-child(2),
+td:nth-child(2) {
+  text-align:right;
+}
+
 th{
 background:#1e293b;
 color:white;
 text-align:left;
+}
+
+.total{
+font-weight:bold;
+font-size:16px;
 }
 
 /* PRINT STYLE */
@@ -135,7 +145,7 @@ border:none;
 <body>
 
 <div class="header">
-UROMI NGO Accounting – Balance Sheet
+Balance Sheet
 </div>
 
 <div class="container">
@@ -154,7 +164,6 @@ UROMI NGO Accounting – Balance Sheet
 
 <div class="report-title">
 <h2>BALANCE SHEET</h2>
-<div>UROMI NGO Financial Statement</div>
 </div>
 
 <div class="report-info">
@@ -169,37 +178,52 @@ Printed: <span id="printDate"></span>
 
 <tr>
 <th>Account</th>
-<th>Total</th>
+<th>Total </th>
 </tr>
 
 {% for a in assets %}
 
 <tr>
-<td>{{a.account}}</td>
-<td>₦ {{a.total}}</td>
+<td>{{a.account_name}}</td>
+<td>₦ {{ "{:,.2f}".format(a.balance) }}</td>
 </tr>
 
 {% endfor %}
 
+<tr class="total">
+<td><strong>Total Assets</strong></td>
+<td><strong>₦ {{ "{:,.2f}".format(total_assets) }}</strong></td>
+</tr>
+
 </table>
 
-<h3>Liabilities</h3>
+<h3>Liabilities & Equity</h3>
 
 <table>
 
 <tr>
 <th>Account</th>
-<th>Total</th>
+<th>Total </th>
 </tr>
 
-{% for l in liabilities %}
+{% for l in liabilities_equity %}
 
 <tr>
-<td>{{l.account}}</td>
-<td>₦ {{l.total}}</td>
+<td>{{l.account_name}}</td>
+<td>₦ {{ "{:,.2f}".format(l.balance) }}</td>
 </tr>
 
 {% endfor %}
+
+<tr class="total">
+<td><strong>Total Liabilities & Equity</strong></td>
+<td><strong>₦ {{ "{:,.2f}".format(total_liab_equity) }}</strong></td>
+</tr>
+
+<tr class="total">
+<td><strong>Net Difference</strong></td>
+<td><strong>₦ {{ "{:,.2f}".format(net_difference) }}</strong></td>
+</tr>
 
 </table>
 

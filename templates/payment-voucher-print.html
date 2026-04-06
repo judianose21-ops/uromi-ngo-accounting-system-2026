@@ -1,85 +1,96 @@
-from fastapi import HTTPException, Request
-from fastapi.responses import HTMLResponse
-import traceback
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ voucher_title }} - {{ pv_number }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .voucher-container { max-width: 900px; margin: 0 auto; background: white; padding: 40px; box-shadow: 0 0 10px rgba(0,0,0,0.1); border: 2px solid #333; }
+        .header { margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 15px; }
+        .brand-row { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+        .logo-section { display: flex; align-items: center; justify-content: flex-start; margin-bottom: 0; }
+        .logo-section img { max-height: 120px; max-width: 220px; object-fit: contain; }
+        .header-branding { display: flex; align-items: center; }
+        .header-branding p { font-size: 18px; font-weight: bold; color: #333; margin: 0; }
+        .header h1 { font-size: 24px; font-weight: bold; margin: 0; text-align: right; }
+        .header p { font-size: 12px; color: #666; }
+        .voucher-number { text-align: right; font-weight: bold; font-size: 14px; margin-bottom: 20px; }
+        .section { margin-bottom: 25px; }
+        .section-label { font-weight: bold; font-size: 12px; text-transform: uppercase; border-bottom: 1px solid #999; padding-bottom: 5px; margin-bottom: 10px; }
+        .field-row { display: flex; margin-bottom: 10px; font-size: 13px; }
+        .field-label { width: 30%; font-weight: bold; text-transform: uppercase; }
+        .field-value { width: 70%; border-bottom: 1px dotted #999; padding: 0 5px; }
+        .two-column { display: flex; gap: 30px; margin-bottom: 10px; }
+        .column { flex: 1; }
+        .wht-section { background: #f0f0f0; padding: 10px; margin: 15px 0; border-left: 4px solid #ff9800; }
+        .amount-box { border: 2px solid #333; padding: 15px; text-align: right; margin: 15px 0; background: #f9f9f9; }
+        .amount-label { font-size: 12px; font-weight: bold; text-transform: uppercase; }
+        .amount-value { font-size: 18px; font-weight: bold; color: #333; margin-top: 5px; }
+        .amount-words { font-size: 12px; margin-top: 5px; font-style: italic; border-top: 1px solid #ccc; padding-top: 5px; }
+        .signature-section { display: flex; justify-content: space-between; margin-top: 40px; padding-top: 30px; border-top: 1px solid #999; }
+        .signature-box { text-align: center; width: 30%; }
+        .signature-line { border-top: 1px solid #333; margin-top: 30px; font-size: 12px; padding-top: 5px; }
+        .divider { border-top: 2px dashed #999; margin: 30px 0; }
+        @media print { body { padding: 0; background: white; } .voucher-container { max-width: 100%; margin: 0; padding: 20px; box-shadow: none; } }
+    </style>
+</head>
+<body>
 
-@app.get("/voucher/{transaction_id}", response_class=HTMLResponse)
-async def view_voucher(transaction_id: int, request: Request):
-    try:
-        with get_db() as conn:
-            row = conn.execute("""
-                SELECT
-                    id,
-                    date,
-                    pv_number,
-                    reference,
-                    description,
-                    type,
-                    amount,
-                    wht_applied,
-                    wht_rate,
-                    project,
-                    main_account,
-                    main_account_code,
-                    sub_account,
-                    sub_account_code
-                FROM transactions
-                WHERE id = ?
-            """, (transaction_id,)).fetchone()
+<div class="voucher-container">
+    <div class="header">
+        <div class="brand-row">
+            <div class="logo-section">
+                <img src="/static/logo.png">
+            </div>
+            <h1>{{ voucher_title }}</h1>
+        </div>
+    </div>
 
-            if not row:
-                raise HTTPException(status_code=404, detail="Transaction not found")
+    <div class="voucher-number">Voucher Number: {{ pv_number }}</div>
 
-            tx = dict(row)
+    <div class="section">
+        <div class="section-label">Transaction Details</div>
+        <div class="field-row"><div class="field-label">Date</div><div class="field-value">{{ date }}</div></div>
+        <div class="field-row"><div class="field-label">Project</div><div class="field-value">{{ project }}</div></div>
+        <div class="field-row"><div class="field-label">Description</div><div class="field-value">{{ description }}</div></div>
+    </div>
 
-        gross_amount = safe_float(tx.get("amount", 0))
-        wht_applied = bool(safe_float(tx.get("wht_applied", 0)))
-        wht_rate = safe_float(tx.get("wht_rate", 0.0))
-        wht_amount = gross_amount * wht_rate if wht_applied else 0.0
-        net_amount = gross_amount - wht_amount
+    <div class="section">
+        <div class="section-label">Payee</div>
+        <div class="field-row"><div class="field-label">Payee</div><div class="field-value">{{ payee }}</div></div>
+        <div class="field-row"><div class="field-label">TIN</div><div class="field-value">{{ payee_tin }}</div></div>
+    </div>
 
-        gross_str = f"₦{gross_amount:,.2f}"
-        wht_str = f"₦{wht_amount:,.2f}" if wht_applied and wht_amount > 0 else "₦0.00"
-        net_str = f"₦{net_amount:,.2f}"
+    <div class="section">
+        <div class="section-label">Account Summary</div>
+        <div class="field-row"><div class="field-label">Account</div><div class="field-value">{{ main_account_code }}  {{ main_account }}</div></div>
+        <div class="field-row"><div class="field-label">Sub Account</div><div class="field-value">{{ sub_account_code }}  {{ sub_account }}</div></div>
+    </div>
 
-        amount_in_words = number_to_ngn_words(net_amount)
+    <div class="section">
+        <div class="section-label">Amounts</div>
+        <div class="field-row"><div class="field-label">Gross Amount</div><div class="field-value">{{ gross_amount_formatted }}</div></div>
+        {% if wht_applied %}
+        <div class="field-row"><div class="field-label">WHT Rate</div><div class="field-value">{{ wht_rate_percent }}%</div></div>
+        <div class="field-row"><div class="field-label">WHT Amount</div><div class="field-value">{{ wht_amount_formatted }}</div></div>
+        {% endif %}
+        <div class="field-row"><div class="field-label">Net Amount</div><div class="field-value">{{ net_amount_formatted }}</div></div>
+    </div>
 
-        payee = tx.get("reference") or tx.get("payee") or "Not specified"
-        payee_tin = tx.get("payee_tin") or tx.get("vendor_tin") or "—"
+    <div class="amount-box">
+        <div class="amount-label">Amount in Words</div>
+        <div class="amount-words">{{ net_amount_in_words }}</div>
+    </div>
 
-        context = {
-            "request": request,
-            "tx": tx,
-            "organization": "CARE INTERNATIONAL",
-            "voucher_title": "PAYMENT VOUCHER" if tx.get("type") == "Expense" else "RECEIPT VOUCHER",
-            "pv_number": tx.get("pv_number") or f"PV-{tx['id']:04d}",
-            "date": tx.get("date", "—"),
-            "description": tx.get("description", "—"),
-            "project": tx.get("project", "—"),
-            "payee": payee,
-            "payee_tin": payee_tin,
-            "main_account_code": tx.get("main_account_code", "—"),
-            "main_account": tx.get("main_account", "—"),
-            "sub_account_code": tx.get("sub_account_code", "—"),
-            "sub_account": tx.get("sub_account", "—"),
-            "gross_amount_formatted": gross_str,
-            "wht_applied": wht_applied,
-            "wht_rate_percent": f"{wht_rate * 100:.1f}" if wht_applied else "0.0",
-            "wht_amount_formatted": wht_str,
-            "net_amount_formatted": net_str,
-            "net_amount_in_words": amount_in_words,
-            "prepared_by": "Jude Oko-Oboh",
-            "approved_by": "Abba Umar",
-        }
+    <div class="signature-section">
+        <div class="signature-box"><div class="signature-line">Prepared By</div><div style="margin-top: 10px; font-size: 12px;">{{ prepared_by }}</div></div>
+        <div class="signature-box"><div class="signature-line">Checked By</div><div style="margin-top: 10px; font-size: 12px;">_______________</div></div>
+        <div class="signature-box"><div class="signature-line">Approved By</div><div style="margin-top: 10px; font-size: 12px;">{{ approved_by }}</div></div>
+    </div>
+</div>
 
-        response = templates.TemplateResponse("payment-voucher-print.html", context)
-        response.headers["Content-Disposition"] = f'inline; filename="voucher-{context["pv_number"]}.html"'
-        return response
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        traceback.print_exc()
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to load voucher: {str(e)}"
-        )
+<script>window.addEventListener('load', function() { window.print(); });</script>
+</body>
+</html>

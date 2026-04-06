@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% block title %}Edit Account - NGO Finance{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">
+                {% if is_main %}
+                    Edit Main Account
+                {% else %}
+                    Edit Sub Account
+                {% endif %}
+            </h2>
+            <small class="text-muted">Update account information</small>
+        </div>
+        <a href="/chart-of-accounts" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i> Back to Accounts
+        </a>
+    </div>
+
+    <!-- ERROR MESSAGE -->
+    {% if error %}
+    <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        {{ error }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    <!-- EDIT FORM -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-lg rounded-4">
+                <div class="card-header {% if is_main %}bg-primary{% else %}bg-success{% endif %} text-white rounded-top-4">
+                    <h5 class="mb-0">
+                        {% if is_main %}
+                            <i class="bi bi-pencil-square me-2"></i> Edit Main Account
+                        {% else %}
+                            <i class="bi bi-pencil-square me-2"></i> Edit Sub Account
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    {% if is_main %}
+                        <!-- EDIT MAIN ACCOUNT FORM -->
+                        <form method="post" action="/update-main-account">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Account Code <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-lg" 
+                                       value="{{ account.account_code }}" readonly disabled style="background-color: #e9ecef;">
+                                <small class="text-muted">Account code cannot be changed</small>
+                                <input type="hidden" name="account_code" value="{{ account.account_code }}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Account Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-lg" name="account_name"
+                                       value="{{ account.account_name }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Account Type <span class="text-danger">*</span></label>
+                                <select class="form-select form-select-lg" name="account_type" required>
+                                    <option value="">— Select Type —</option>
+                                    <option value="Asset" {% if account.account_type == 'Asset' %}selected{% endif %}>Asset</option>
+                                    <option value="Liability" {% if account.account_type == 'Liability' %}selected{% endif %}>Liability</option>
+                                    <option value="Equity" {% if account.account_type == 'Equity' %}selected{% endif %}>Equity</option>
+                                    <option value="Income" {% if account.account_type == 'Income' %}selected{% endif %}>Income</option>
+                                    <option value="Expense" {% if account.account_type == 'Expense' %}selected{% endif %}>Expense</option>
+                                </select>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">Description</label>
+                                <textarea class="form-control" name="description" rows="3">{{ account.description or '' }}</textarea>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary btn-lg fw-semibold">
+                                    <i class="bi bi-check-circle me-2"></i> Update Account
+                                </button>
+                            </div>
+                        </form>
+                    {% else %}
+                        <!-- EDIT SUB ACCOUNT FORM -->
+                        <form method="post" action="/update-subaccount">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Sub Account Code <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-lg" 
+                                       value="{{ account.sub_account_code }}" readonly disabled style="background-color: #e9ecef;">
+                                <small class="text-muted">Sub account code cannot be changed</small>
+                                <input type="hidden" name="sub_account_code" value="{{ account.sub_account_code }}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Parent Account <span class="text-danger">*</span></label>
+                                <select class="form-select form-select-lg" name="parent_account_code" required>
+                                    <option value="">— Select Parent Account —</option>
+                                    {% for acc in main_accounts %}
+                                    <option value="{{ acc.account_code }}" {% if account.parent_account_code == acc.account_code %}selected{% endif %}>
+                                        {{ acc.account_name }} ({{ acc.account_code }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Sub Account Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-lg" name="sub_account_name"
+                                       value="{{ account.sub_account_name }}" required>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">Description</label>
+                                <textarea class="form-control" name="description" rows="3">{{ account.description or '' }}</textarea>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-success btn-lg fw-semibold">
+                                    <i class="bi bi-check-circle me-2"></i> Update Sub Account
+                                </button>
+                            </div>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- INFO PANEL -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-lg rounded-4 bg-light">
+                <div class="card-body p-4">
+                    <h5 class="fw-semibold mb-3">Account Information</h5>
+                    
+                    {% if is_main %}
+                        <div class="mb-3">
+                            <label class="text-muted small">Account Code</label>
+                            <p class="fw-semibold">{{ account.account_code }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small">Account Name</label>
+                            <p class="fw-semibold">{{ account.account_name }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small">Account Type</label>
+                            <p>
+                                <span class="badge bg-primary fs-6">{{ account.account_type }}</span>
+                            </p>
+                        </div>
+                    {% else %}
+                        <div class="mb-3">
+                            <label class="text-muted small">Sub Account Code</label>
+                            <p class="fw-semibold">{{ account.sub_account_code }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small">Sub Account Name</label>
+                            <p class="fw-semibold">{{ account.sub_account_name }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small">Parent Account</label>
+                            <p class="fw-semibold">{{ account.parent_account_code }}</p>
+                        </div>
+                    {% endif %}
+                    
+                    {% if account.created_at %}
+                    <div class="mb-3">
+                        <label class="text-muted small">Created</label>
+                        <p class="text-muted">{{ account.created_at }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <hr class="my-3">
+                    
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Note:</strong> Account codes cannot be changed. To modify the code, delete this account and create a new one.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

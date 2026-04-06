@@ -1,12 +1,21 @@
 /* =========================
    GLOBAL STYLES
 ========================= */
-body {
-    background-color: #f4f6f9;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: #333;
+.submenu-title{
+    padding:10px 40px;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    color:#94a3b8;
+    font-weight:600;
+    background:#243049;
 }
 
+.submenu hr{
+    border:0;
+    border-top:1px solid rgba(255,255,255,0.15);
+    margin:8px 0;
+}
 /* =========================
    SIDEBAR
 ========================= */
@@ -39,6 +48,17 @@ body {
 .sidebar .nav-link.active {
     background-color: #0d6efd;
     border-radius: 6px;
+}
+.report-action{
+    padding:12px 40px;
+    cursor:pointer;
+    font-size:14px;
+    background:#1f2a40;
+    transition:all 0.2s;
+}
+
+.report-action:hover{
+    background:#3b82f6;
 }
 
 /* =========================
@@ -151,4 +171,23 @@ canvas {
     th, td {
         padding: 5px !important;
     }
+}
+// Collapsible Sidebar Toggle
+function toggleSidebar() {
+
+// ================= REPORT ACTIONS =================
+
+function printBudget(){
+    window.open("/print-budget","_blank");
+}
+
+function generateBVA(){
+    if(confirm("Generate Budget Variance Analysis Report?")){
+        window.location.href="/generate-bva";
+    }
+}
+
+function printBVA(){
+    window.open("/print-bva","_blank");
+}
 }

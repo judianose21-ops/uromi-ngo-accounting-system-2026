@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Add Salary Component - UROMI NGO Accounting{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Add Salary Component</h2>
+        <a href="/salary-components" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Components
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Component Details</h5>
+                </div>
+                <div class="card-body">
+                    {% if error %}
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i> {{ error }}
+                        </div>
+                    {% endif %}
+
+                    <form method="post">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="component_name" class="form-label">Component Name *</label>
+                                <input type="text" class="form-control" id="component_name" name="component_name" required>
+                                <small class="text-muted">e.g., Housing Allowance, Transport Allowance</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="component_type" class="form-label">Component Type *</label>
+                                <select class="form-select" id="component_type" name="component_type" required>
+                                    <option value="">Select Type</option>
+                                    <option value="allowance">Allowance (Added to salary)</option>
+                                    <option value="deduction">Deduction (Subtracted from salary)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Calculation Method *</label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="calculation_type" id="fixed_amount" value="fixed" checked>
+                                        <label class="form-check-label" for="fixed_amount">
+                                            Fixed Amount
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="calculation_type" id="percentage" value="percentage">
+                                        <label class="form-check-label" for="percentage">
+                                            Percentage of Basic Salary
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="fixed_amount_fields" class="mb-3">
+                            <label for="fixed_amount" class="form-label">Fixed Amount (₦)</label>
+                            <input type="number" class="form-control" id="fixed_amount_input" name="fixed_amount" step="0.01" min="0">
+                        </div>
+
+                        <div id="percentage_fields" class="mb-3" style="display: none;">
+                            <label for="percentage_value" class="form-label">Percentage (%)</label>
+                            <input type="number" class="form-control" id="percentage_value" name="percentage_value" step="0.01" min="0" max="100">
+                            <small class="text-muted">e.g., 8 for 8%, 25 for 25%</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_taxable" name="is_taxable" value="1" checked>
+                                <label class="form-check-label" for="is_taxable">
+                                    This component is taxable
+                                </label>
+                            </div>
+                            <small class="text-muted">Taxable components are included in PAYE calculations</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" placeholder="Optional description of this salary component"></textarea>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Component
+                            </button>
+                            <a href="/salary-components" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Help & Examples</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Allowance Examples</h6>
+                    <ul class="small">
+                        <li>Housing Allowance - Fixed amount or percentage</li>
+                        <li>Transport Allowance - Usually fixed</li>
+                        <li>Medical Allowance - Fixed amount</li>
+                        <li>Overtime Pay - Usually percentage or calculated separately</li>
+                    </ul>
+
+                    <h6>Deduction Examples</h6>
+                    <ul class="small">
+                        <li>Pension Contribution - Usually 8% of basic salary</li>
+                        <li>NHF (National Housing Fund) - 2.5% of basic salary</li>
+                        <li>NHIS (Health Insurance) - 5% of basic salary</li>
+                        <li>Loan Repayments - Fixed amounts</li>
+                        <li>Union Dues - Fixed amounts</li>
+                    </ul>
+
+                    <h6>Tax Considerations</h6>
+                    <p class="small text-muted">Most allowances are taxable and included in PAYE calculations. Some deductions like pension contributions may be tax-exempt.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Toggle calculation method fields
+document.querySelectorAll('input[name="calculation_type"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        const fixedFields = document.getElementById('fixed_amount_fields');
+        const percentageFields = document.getElementById('percentage_fields');
+        const fixedInput = document.getElementById('fixed_amount_input');
+        const percentageInput = document.getElementById('percentage_value');
+
+        if (this.value === 'fixed') {
+            fixedFields.style.display = 'block';
+            percentageFields.style.display = 'none';
+            fixedInput.required = true;
+            percentageInput.required = false;
+            percentageInput.value = '';
+        } else {
+            fixedFields.style.display = 'none';
+            percentageFields.style.display = 'block';
+            fixedInput.required = false;
+            percentageInput.required = true;
+            fixedInput.value = '';
+        }
+    });
+});
+</script>
+{% endblock %}

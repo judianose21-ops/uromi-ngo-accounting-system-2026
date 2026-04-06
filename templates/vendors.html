@@ -1,51 +1,144 @@
 {% extends "base.html" %}
-{% block title %}Vendors{% endblock %}
+{% block title %}Vendors Management - CARE Initiative{% endblock %}
 
 {% block content %}
 <div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between mb-4">
-        <h2>Vendors List</h2>
-        <a href="/vendors/add" class="btn btn-primary">+ Add New Vendor</a>
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-shop"></i> Vendors Management</h2>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="/vendors/add" class="btn btn-success btn-lg"><i class="bi bi-plus-circle"></i> Add New Vendor</a>
+        </div>
     </div>
 
+    <!-- Success/Error Messages -->
     {% if success_msg %}
-    <div class="alert alert-success">{{ success_msg }}</div>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle"></i> {{ success_msg }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
     {% endif %}
     {% if error_msg %}
-    <div class="alert alert-danger">{{ error_msg }}</div>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-circle"></i> {{ error_msg }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
     {% endif %}
 
-    <div class="card">
-        <div class="card-body p-0">
+    <!-- Search/Filter Panel -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-body">
+            <form action="/vendors/search" method="get" class="d-flex gap-2">
+                <input type="text" name="q" class="form-control" placeholder="Search by name, TIN, phone, or email..." value="{{ search_query|default('') }}">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Search</button>
+                <a href="/vendors" class="btn btn-outline-secondary"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
+            </form>
+        </div>
+    </div>
+
+    <!-- Vendors Count Card -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h6 class="card-title mb-0">Total Vendors</h6>
+                            <h3 class="mb-0">{{ vendors|length }}</h3>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-shop" style="font-size: 3rem; opacity: 0.3;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vendors Table -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-light border-bottom">
+            <h5 class="mb-0">Vendors List</h5>
+        </div>
+        <div class="table-responsive">
             <table class="table table-hover mb-0">
-                <thead class="table-dark">
+                <thead class="table-light">
                     <tr>
-                        <th>Name</th>
-                        <th>TIN</th>
-                        <th>Phone</th>
-                        <th>Email</th>
-                        <th>Bank</th>
-                        <th>Actions</th>
+                        <th><i class="bi bi-shop"></i> Name</th>
+                        <th><i class="bi bi-hash"></i> TIN</th>
+                        <th><i class="bi bi-telephone"></i> Phone</th>
+                        <th><i class="bi bi-envelope"></i> Email</th>
+                        <th><i class="bi bi-bank"></i> Bank Details</th>
+                        <th style="width: 200px;"><i class="bi bi-gear"></i> Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for v in vendors %}
                     <tr>
-                        <td>{{ v.name }}</td>
-                        <td>{{ v.tin or '—' }}</td>
-                        <td>{{ v.phone or '—' }}</td>
-                        <td>{{ v.email or '—' }}</td>
-                        <td>{{ v.bank_name or '—' }} {{ v.account_number or '' }}</td>
                         <td>
-                            <a href="/vendors/edit/{{ v.id }}" class="btn btn-sm btn-warning">Edit</a>
+                            <a href="/vendors/{{ v.id }}" class="text-decoration-none fw-bold">{{ v.name }}</a>
+                        </td>
+                        <td>
+                            {% if v.tin %}
+                                <span class="badge bg-info">{{ v.tin }}</span>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if v.phone %}
+                                <a href="tel:{{ v.phone }}" class="text-decoration-none">{{ v.phone }}</a>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if v.email %}
+                                <a href="mailto:{{ v.email }}" class="text-decoration-none">{{ v.email }}</a>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if v.bank_name or v.account_number %}
+                                <small class="text-muted">{{ v.bank_name or '' }} {{ v.account_number or '' }}</small>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="/vendors/{{ v.id }}" class="btn btn-info" title="View Details"><i class="bi bi-eye"></i></a>
+                                <a href="/vendors/edit/{{ v.id }}" class="btn btn-warning" title="Edit"><i class="bi bi-pencil"></i></a>
+                                <form action="/vendors/delete/{{ v.id }}" method="POST" class="d-inline" onsubmit="return confirm('Delete {{ v.name }}? This cannot be undone.');">
+                                    <button type="submit" class="btn btn-danger btn-sm" title="Delete"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="6" class="text-center py-4">No vendors yet</td></tr>
+                    <tr>
+                        <td colspan="6" class="text-center py-4">
+                            <div class="text-muted">
+                                <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                                <p class="mt-2">No vendors found</p>
+                                <a href="/vendors/add" class="btn btn-primary btn-sm">Create First Vendor</a>
+                            </div>
+                        </td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+
+<style>
+    .btn-group-sm .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+</style>
+
 {% endblock %}

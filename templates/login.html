@@ -9,11 +9,24 @@
 <div class="login-container">
     <div class="card p-4" style="width: 350px;">
         <h3 class="text-center mb-4">Login</h3>
-        <form>
-            <input type="text" class="form-control mb-3" placeholder="Username">
-            <input type="password" class="form-control mb-3" placeholder="Password">
-            <button type="submit" class="btn btn-primary w-100">Login</button>
+        {% if error %}
+        <div class="alert alert-danger" role="alert">{{ error }}</div>
+        {% endif %}
+        <form method="post" action="/login">
+            <input type="text" name="username" class="form-control mb-3" placeholder="Username" required>
+            <input type="password" name="password" class="form-control mb-3" placeholder="Password" required>
+            <select name="role" class="form-control mb-3" required>
+                <option value="" disabled selected>Select role</option>
+                <option value="admin">Admin</option>
+                <option value="finance">Finance</option>
+                <option value="audit">Audit</option>
+            </select>
+            <button type="submit" class="btn btn-danger w-100">Login</button>
         </form>
+        <div class="mt-3 d-flex justify-content-between">
+            <a href="/forgot-password">Forgot password?</a>
+            <a href="/change-password">Change password</a>
+        </div>
     </div>
 </div>
 </body>

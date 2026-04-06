@@ -101,7 +101,12 @@ padding:10px;
 border-bottom:1px solid #ddd;
 text-align:left;
 }
-
+th:nth-child(2),
+th:nth-child(3),
+td:nth-child(2),
+td:nth-child(3) {
+  text-align:right;
+}
 th{
 background:#1e293b;
 color:white;
@@ -163,7 +168,7 @@ NGO Accounting System
 </div>
 
 <div class="org-title">
-<h2>UROMI NGO</h2>
+<h2>CARE Initiative</h2>
 <div>Trial Balance Report</div>
 </div>
 
@@ -178,19 +183,19 @@ Printed: <span id="printDate"></span>
 <thead>
 <tr>
 <th>Account</th>
-<th>Debit</th>
-<th>Credit</th>
+<th>Debit </th>
+<th>Credit </th>
 </tr>
 </thead>
 
 <tbody>
 
-{% for r in rows %}
+{% for r in accounts %}
 
 <tr>
-<td>{{r.account}}</td>
-<td>{{r.debit}}</td>
-<td>{{r.credit}}</td>
+<td>{{r.account_name}}</td>
+<td>{{ "{:,.2f}".format(r.debit) }}</td>
+<td>{{ "{:,.2f}".format(r.credit) }}</td>
 </tr>
 
 {% endfor %}

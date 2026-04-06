@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}Salary Components - UROMI NGO Accounting{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Salary Components Management</h2>
+        <div>
+            <a href="/payroll" class="btn btn-secondary me-2">
+                <i class="fas fa-arrow-left"></i> Back to Payroll
+            </a>
+            <a href="/add-salary-component" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Component
+            </a>
+        </div>
+    </div>
+
+    {% if components %}
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-plus-circle"></i> Allowances</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Component Name</th>
+                                        <th>Type</th>
+                                        <th>Amount</th>
+                                        <th>Taxable</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for component in components %}
+                                        {% if component.component_type == 'allowance' %}
+                                        <tr>
+                                            <td>{{ component.component_name }}</td>
+                                            <td>
+                                                <span class="badge bg-success">Allowance</span>
+                                            </td>
+                                            <td>
+                                                {% if component.is_percentage %}
+                                                    {{ component.percentage_value }}%
+                                                {% else %}
+                                                    {{ "{:,.2f}".format(component.fixed_amount) | format_currency }}
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if component.is_taxable %}
+                                                    <span class="badge bg-warning">Taxable</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Non-taxable</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0"><i class="fas fa-minus-circle"></i> Deductions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Component Name</th>
+                                        <th>Type</th>
+                                        <th>Amount</th>
+                                        <th>Taxable</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for component in components %}
+                                        {% if component.component_type == 'deduction' %}
+                                        <tr>
+                                            <td>{{ component.component_name }}</td>
+                                            <td>
+                                                <span class="badge bg-danger">Deduction</span>
+                                            </td>
+                                            <td>
+                                                {% if component.is_percentage %}
+                                                    {{ component.percentage_value }}%
+                                                {% else %}
+                                                    {{ "{:,.2f}".format(component.fixed_amount) | format_currency }}
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if component.is_taxable %}
+                                                    <span class="badge bg-warning">Taxable</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Non-taxable</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">All Salary Components</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Component Name</th>
+                                <th>Type</th>
+                                <th>Calculation</th>
+                                <th>Taxable</th>
+                                <th>Description</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for component in components %}
+                            <tr>
+                                <td>{{ component.component_name }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if component.component_type == 'allowance' else 'danger' }}">
+                                        {{ component.component_type.title() }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if component.is_percentage %}
+                                        {{ component.percentage_value }}% of Basic Salary
+                                    {% else %}
+                                        Fixed: {{ "{:,.2f}".format(component.fixed_amount) | format_currency }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if component.is_taxable %}
+                                        <span class="badge bg-warning">Yes</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">No</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ component.description or '—' }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-cogs fa-3x text-muted mb-3"></i>
+                <h4>No Salary Components Found</h4>
+                <p class="text-muted">Salary components are automatically created when you first run the payroll system.</p>
+                <a href="/add-salary-component" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add Salary Component
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

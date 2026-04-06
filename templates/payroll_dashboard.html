@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Payroll Management - UROMI NGO Accounting{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Payroll Management System</h2>
+        <div>
+            <a href="/employees" class="btn btn-primary me-2">
+                <i class="fas fa-users"></i> Manage Employees
+            </a>
+            <a href="/payroll-processing" class="btn btn-success">
+                <i class="fas fa-calculator"></i> Process Payroll
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-users"></i> Total Employees
+                    </h5>
+                    <h3 class="mb-0">{{ stats.total_employees }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-clock"></i> Active Payroll Runs
+                    </h5>
+                    <h3 class="mb-0">{{ stats.active_payroll_runs }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-list"></i> Salary Components
+                    </h5>
+                    <h3 class="mb-0">{{ stats.total_salary_components }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-chart-line"></i> Payroll Reports
+                    </h5>
+                    <h3 class="mb-0">
+                        <a href="/payroll-reports" class="text-white text-decoration-none">
+                            View Reports
+                        </a>
+                    </h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <a href="/add-employee" class="btn btn-outline-primary w-100 mb-2">
+                                <i class="fas fa-user-plus"></i><br>Add Employee
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="/salary-components" class="btn btn-outline-secondary w-100 mb-2">
+                                <i class="fas fa-cogs"></i><br>Salary Components
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="/payroll-processing" class="btn btn-outline-success w-100 mb-2">
+                                <i class="fas fa-play"></i><br>Process Payroll
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="/payroll-reports" class="btn btn-outline-info w-100 mb-2">
+                                <i class="fas fa-chart-bar"></i><br>View Reports
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Payroll Runs -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Payroll Runs</h5>
+                </div>
+                <div class="card-body">
+                    {% if stats.recent_payroll_runs %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Period</th>
+                                        <th>Status</th>
+                                        <th>Total Net Pay</th>
+                                        <th>Pay Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for run in stats.recent_payroll_runs %}
+                                    <tr>
+                                        <td>{{ run.payroll_period }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ 'success' if run.status == 'paid' else 'warning' if run.status == 'processed' else 'secondary' }}">
+                                                {{ run.status.title() }}
+                                            </span>
+                                        </td>
+                                        <td>{{ "{:,.2f}".format(run.total_net) | format_currency }}</td>
+                                        <td>{{ run.pay_date }}</td>
+                                        <td>
+                                            <a href="/payroll-run/{{ run.id }}" class="btn btn-sm btn-outline-primary">
+                                                View Details
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">No payroll runs found. <a href="/payroll-processing">Create your first payroll run</a></p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

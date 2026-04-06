@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Add / Edit Transaction - UROMI NGO Accounting{% endblock %}
+{% block title %}Add / Edit Transaction - CARE Initiative{% endblock %}
 
 {% block content %}
 <div class="container-fluid mt-4">
@@ -19,8 +19,11 @@
                     </div>
                     {% endif %}
 
-                    <form action="{% if is_edit %}/edit-transaction/{{ edit_id }}{% else %}/add-transaction{% endif %}"
+                    <form action="{% if is_edit %}/update-transaction{% else %}/add-transaction{% endif %}"
                           method="post" id="transactionForm">
+                        {% if is_edit %}
+                        <input type="hidden" name="id" value="{{ edit_id }}">
+                        {% endif %}
                         <div class="row g-3">
 
                             <!-- Date -->
@@ -86,6 +89,22 @@
                                     <option value="{{ p.project_name }}"
                                             {% if (form_data.project or transaction.project) == p.project_name %}selected{% endif %}>
                                         {{ p.project_name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Vendor Selector -->
+                            <div class="col-md-6">
+                                <label for="vendor_id" class="form-label">Vendor</label>
+                                <select class="form-select" id="vendor_id" name="vendor_id">
+                                    <option value="">— Select Vendor (optional) —</option>
+                                    {% for v in vendors %}
+                                    <option value="{{ v.id }}"
+                                            data-tin="{{ v.tin or '' }}"
+                                            data-account="{{ v.bank_name or '' }}{% if v.bank_name and v.account_number %} - {% endif %}{{ v.account_number or '' }}"
+                                            {% if (form_data.vendor_tin or transaction.vendor_tin) == v.tin %}selected{% endif %}>
+                                        {{ v.name }}{% if v.tin %} — {{ v.tin }}{% endif %}
                                     </option>
                                     {% endfor %}
                                 </select>
@@ -158,12 +177,12 @@
                                     <div class="col-md-6">
                                         <label for="wht_amount_display" class="form-label">WHT Amount (₦) - calculated</label>
                                         <input type="text" class="form-control bg-light" id="wht_amount_display" readonly
-                                               value="{{ form_data.wht_amount or transaction.wht_amount|format_currency if transaction.wht_amount else '₦0.00' }}">
+                                               value="{% if form_data.wht_amount %}{{ form_data.wht_amount|float|format_currency }}{% elif transaction.wht_amount %}{{ transaction.wht_amount|format_currency }}{% else %}₦0.00{% endif %}">
                                     </div>
                                     <div class="col-md-6">
                                         <label for="net_amount_display" class="form-label">Net Amount to Pay (₦)</label>
                                         <input type="text" class="form-control bg-light fw-bold" id="net_amount_display" readonly
-                                               value="{{ form_data.net_amount or transaction.net_amount|format_currency if transaction.net_amount else '₦0.00' }}">
+                                               value="{% if form_data.net_amount %}{{ form_data.net_amount|float|format_currency }}{% elif transaction.net_amount %}{{ transaction.net_amount|format_currency }}{% else %}₦0.00{% endif %}">
                                     </div>
                                 </div>
                             </div>
@@ -236,6 +255,18 @@ document.addEventListener('DOMContentLoaded', function() {
             subSelect.value = '';
         });
         if (mainSelect.value) mainSelect.dispatchEvent(new Event('change'));
+    }
+
+    const vendorSelect = document.getElementById('vendor_id');
+    const vendorTinInput = document.getElementById('vendor_tin');
+    const vendorDetailsInput = document.getElementById('vendor_account_details');
+
+    if (vendorSelect && vendorTinInput && vendorDetailsInput) {
+        vendorSelect.addEventListener('change', () => {
+            const selected = vendorSelect.selectedOptions[0];
+            vendorTinInput.value = selected?.dataset?.tin || '';
+            vendorDetailsInput.value = selected?.dataset?.account || '';
+        });
     }
 });
 </script>

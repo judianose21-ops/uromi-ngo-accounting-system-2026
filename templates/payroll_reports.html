@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}Payroll Reports - UROMI NGO Accounting{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Payroll Reports</h2>
+        <a href="/payroll" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Payroll Dashboard
+        </a>
+    </div>
+
+    <!-- Report Filters -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Report Filters</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="report_type" class="form-label">Report Type</label>
+                    <select class="form-select" id="report_type" name="report_type">
+                        <option value="summary">Payroll Summary</option>
+                        <option value="employee">Employee Salary Report</option>
+                        <option value="tax">Tax Report</option>
+                        <option value="deductions">Deductions Report</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="period_from" class="form-label">From Period</label>
+                    <input type="month" class="form-control" id="period_from" name="period_from">
+                </div>
+                <div class="col-md-3">
+                    <label for="period_to" class="form-label">To Period</label>
+                    <input type="month" class="form-control" id="period_to" name="period_to">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <div>
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-search"></i> Generate Report
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="exportReport()">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Payroll Summary Report -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Payroll Summary by Period</h5>
+        </div>
+        <div class="card-body">
+            {% if payroll_summary %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Payroll Period</th>
+                                <th>Number of Employees</th>
+                                <th>Total Gross Salary</th>
+                                <th>Total Deductions</th>
+                                <th>Total Net Salary</th>
+                                <th>Average Net Salary</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for summary in payroll_summary %}
+                            <tr>
+                                <td>{{ summary.payroll_period }}</td>
+                                <td>{{ summary.employees_count }}</td>
+                                <td>{{ "{:,.2f}".format(summary.total_gross) | format_currency }}</td>
+                                <td>{{ "{:,.2f}".format(summary.total_deductions) | format_currency }}</td>
+                                <td>{{ "{:,.2f}".format(summary.total_net) | format_currency }}</td>
+                                <td>{{ "{:,.2f}".format(summary.total_net / summary.employees_count) | format_currency }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-dark">
+                            <tr>
+                                <th>TOTAL</th>
+                                <th>{{ payroll_summary | sum(attribute='employees_count') }}</th>
+                                <th>{{ "{:,.2f}".format(payroll_summary | sum(attribute='total_gross')) | format_currency }}</th>
+                                <th>{{ "{:,.2f}".format(payroll_summary | sum(attribute='total_deductions')) | format_currency }}</th>
+                                <th>{{ "{:,.2f}".format(payroll_summary | sum(attribute='total_net')) | format_currency }}</th>
+                                <th>{{ "{:,.2f}".format((payroll_summary | sum(attribute='total_net')) / (payroll_summary | sum(attribute='employees_count'))) | format_currency }}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                    <h5>No Payroll Data Found</h5>
+                    <p class="text-muted">Process payroll runs to generate reports.</p>
+                    <a href="/payroll-processing" class="btn btn-primary">
+                        <i class="fas fa-calculator"></i> Process Payroll
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Employee Salary Summary -->
+    {% if employee_summary %}
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Employee Salary Summary</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Employee Name</th>
+                            <th>Employee ID</th>
+                            <th>Department</th>
+                            <th>Payroll Runs</th>
+                            <th>Average Gross Salary</th>
+                            <th>Average Net Salary</th>
+                            <th>Total Paid (Net)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for emp in employee_summary %}
+                        <tr>
+                            <td>{{ emp.first_name }} {{ emp.last_name }}</td>
+                            <td>{{ emp.employee_id }}</td>
+                            <td>{{ emp.department or '—' }}</td>
+                            <td>{{ emp.payroll_runs }}</td>
+                            <td>{{ "{:,.2f}".format(emp.avg_gross) | format_currency }}</td>
+                            <td>{{ "{:,.2f}".format(emp.avg_net) | format_currency }}</td>
+                            <td>{{ "{:,.2f}".format(emp.avg_net * emp.payroll_runs) | format_currency }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function exportReport() {
+    // Simple CSV export for the current view
+    const tables = document.querySelectorAll('.table');
+    let csv = '';
+
+    tables.forEach((table, tableIndex) => {
+        if (tableIndex > 0) csv += '\n\n'; // Separate tables
+
+        // Add table title
+        const title = table.closest('.card').querySelector('.card-header h5').textContent;
+        csv += title + '\n';
+
+        // Add headers
+        const headers = [];
+        const headerCells = table.querySelectorAll('thead th');
+        headerCells.forEach(cell => {
+            headers.push('"' + cell.textContent.trim() + '"');
+        });
+        csv += headers.join(',') + '\n';
+
+        // Add data rows
+        const rows = table.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            const rowData = [];
+            cells.forEach(cell => {
+                let cellText = cell.textContent.trim();
+                cellText = cellText.replace(/[₦,]/g, ''); // Remove currency formatting
+                rowData.push('"' + cellText + '"');
+            });
+            csv += rowData.join(',') + '\n';
+        });
+    });
+
+    // Download CSV
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'payroll_report.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+</script>
+{% endblock %}

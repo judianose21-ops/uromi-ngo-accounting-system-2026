@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ voucher_title }} - {{ pv_number }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .voucher-container {
+            max-width: 950px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border: 2px solid #333;
+        }
+        .header {
+            margin-bottom: 30px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 15px;
+        }
+        .brand-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        .logo-section {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        .logo-section img {
+            max-height: 120px;
+            max-width: 220px;
+            object-fit: contain;
+        }
+        .header h1 {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0;
+            text-align: right;
+        }
+        .header p {
+            font-size: 12px;
+            color: #666;
+        }
+        .voucher-number {
+            text-align: right;
+            font-weight: bold;
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+        .section {
+            margin-bottom: 25px;
+        }
+        .section-label {
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #999;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+        .field-row {
+            display: flex;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+        .field-label {
+            width: 30%;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .field-value {
+            width: 70%;
+            border-bottom: 1px dotted #999;
+            padding: 0 5px;
+        }
+        .two-column {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 10px;
+        }
+        .column {
+            flex: 1;
+        }
+        .wht-section {
+            background: #f0f0f0;
+            padding: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #ff9800;
+        }
+        .amount-box {
+            border: 2px solid #333;
+            padding: 15px;
+            text-align: right;
+            margin: 15px 0;
+            background: #f9f9f9;
+        }
+        .amount-label {
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .amount-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-top: 5px;
+        }
+        .amount-words {
+            font-size: 12px;
+            margin-top: 5px;
+            font-style: italic;
+            border-top: 1px solid #ccc;
+            padding-top: 5px;
+        }
+        .signature-section {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid #999;
+        }
+        .signature-box {
+            text-align: center;
+            width: 30%;
+        }
+        .signature-line {
+            border-top: 1px solid #333;
+            margin-top: 30px;
+            font-size: 12px;
+            padding-top: 5px;
+        }
+        .divider {
+            border-top: 2px dashed #999;
+            margin: 30px 0;
+        }
+        @media print {
+            body {
+                padding: 0;
+                background: white;
+            }
+            .voucher-container {
+                max-width: 100%;
+                margin: 0;
+                padding: 20px;
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="voucher-container">
+    <!-- Header -->
+    <div class="header">
+        <div class="brand-row">
+            <div class="logo-section">
+                <img src="/static/logo.png" alt="Organization Logo">
+            </div>
+            <h1>{{ voucher_title }}</h1>
+        </div>
+    </div>
+
+    <div class="voucher-number">
+        PV No: <strong>{{ pv_number }}</strong>
+    </div>
+
+    <!-- Transaction Details Section -->
+    <div class="section">
+        <div class="section-label">Transaction Details</div>
+        
+        <div class="two-column">
+            <div class="column">
+                <div class="field-row">
+                    <div class="field-label">Date</div>
+                    <div class="field-value">{{ tx_date }}</div>
+                </div>
+                <div class="field-row">
+                    <div class="field-label">Type</div>
+                    <div class="field-value">{{ tx.type | upper }}</div>
+                </div>
+            </div>
+            <div class="column">
+                <div class="field-row">
+                    <div class="field-label">Project</div>
+                    <div class="field-value">{{ project }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="field-row">
+            <div class="field-label">Description</div>
+            <div class="field-value">{{ description }}</div>
+        </div>
+    </div>
+
+    <!-- Account Details Section -->
+    <div class="section">
+        <div class="section-label">Account Details</div>
+        
+        <div class="field-row">
+            <div class="field-label">Main Account</div>
+            <div class="field-value">{{ main_account_display }}</div>
+        </div>
+        <div class="field-row">
+            <div class="field-label">Sub Account</div>
+            <div class="field-value">{{ sub_account_display }}</div>
+        </div>
+    </div>
+
+    <!-- Payment Details Section -->
+    <div class="section">
+        <div class="section-label">Payment Details</div>
+        
+        <div class="field-row">
+            <div class="field-label">Payee</div>
+            <div class="field-value">{{ payee }}</div>
+        </div>
+        <div class="field-row">
+            <div class="field-label">Payee TIN</div>
+            <div class="field-value">{{ payee_tin }}</div>
+        </div>
+    </div>
+
+    <!-- Amount Section -->
+    <div class="section">
+        <div class="section-label">Amount Details </div>
+        
+        <div class="amount-box">
+            <div class="amount-label">Gross Amount</div>
+            <div class="amount-value">{{ gross_amount_formatted }}</div>
+        </div>
+
+        {% if wht_applied %}
+        <div class="wht-section">
+            <div class="field-row">
+                <div class="field-label">WHT Rate</div>
+                <div class="field-value">{{ wht_rate_percent }}%</div>
+            </div>
+            <div class="field-row">
+                <div class="field-label">WHT Amount</div>
+                <div class="field-value">{{ wht_amount_formatted }}</div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="amount-box">
+            <div class="amount-label">{% if wht_applied %}Net Amount to Pay{% else %}Amount{% endif %}</div>
+            <div class="amount-value">{{ net_amount_formatted }}</div>
+            <div class="amount-words">In Words: {{ amount_in_words }}</div>
+        </div>
+    </div>
+
+    <!-- Signature Section -->
+    <div class="signature-section">
+        <div class="signature-box">
+            <div class="signature-line">Prepared By</div>
+            <div style="margin-top: 10px; font-size: 12px;">{{ prepared_by }}</div>
+        </div>
+        <div class="signature-box">
+            <div style="margin-top: 10px; font-size: 12px;">_______________</div>
+        </div>
+        <div class="signature-box">
+            <div class="signature-line">Approved By</div>
+            <div style="margin-top: 10px; font-size: 12px;">{{ approved_by }}</div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Auto-print dialog on load
+    window.addEventListener('load', function() {
+        window.print();
+    });
+</script>
+
+</body>
+</html>

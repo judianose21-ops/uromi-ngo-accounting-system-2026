@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Transactions - UROMI NGO Accounting{% endblock %}
+{% block title %}Transactions - CARE Initiative{% endblock %}
 
 {% block content %}
 <div class="container-fluid mt-4">
@@ -17,6 +17,23 @@
         </div>
     </div>
 
+    <!-- MESSAGES -->
+    {% if success_msg %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {% if success_msg == 'created' %}Transaction added successfully!{% endif %}
+        {% if success_msg == 'updated' %}Transaction updated successfully!{% endif %}
+        {% if success_msg == 'deleted' %}Transaction deleted successfully!{% endif %}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    {% if error_msg %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ error_msg }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
     {% if transactions|length == 0 %}
         <div class="alert alert-info text-center py-4">
             No transactions recorded yet.
@@ -25,13 +42,19 @@
 
     <!-- SEARCH + SUMMARY -->
     <div class="row mb-3 align-items-center">
-        <div class="col-md-6">
+        <div class="col-md-4">
             <input type="text" class="form-control" id="searchInput"
                    placeholder="🔍 Search by description, vendor, PV, account...">
         </div>
-        <div class="col-md-6 text-md-end mt-2 mt-md-0">
-            <strong>Total Gross: ₦<span id="totalGross">0.00</span></strong>
-              |  
+        <div class="col-md-4 mt-2 mt-md-0">
+            <select class="form-select" id="vendorFilter">
+                <option value="">— Filter by Vendor —</option>
+                {% for v in vendors %}
+                <option value="{{ v.name | lower }}">{{ v.name }}{% if v.tin %} — {{ v.tin }}{% endif %}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4 text-md-end mt-2 mt-md-0">
             <strong>Net: ₦<span id="totalNet">0.00</span></strong>
         </div>
     </div>
@@ -43,86 +66,69 @@
                 <table class="table table-hover table-striped align-middle mb-0 small" id="transactionTable">
                     <thead class="table-dark text-nowrap">
                         <tr>
+                            <th>#</th>
                             <th>Date</th>
-                            <th>PV No.</th>
-                            <th>Vendor</th>
+                            <th>Month</th>
+                            <th>PV Number</th>
+                            <th>Vendor TIN</th>
+                            <th>Vendor Account</th>
                             <th>Description</th>
                             <th>Account</th>
+                            <th>Project</th>
                             <th>Type</th>
-                            <th class="text-end">Gross</th>
-                            <th class="text-end">WHT</th>
-                            <th class="text-end">Net</th>
+                            <th class="text-end">Amount (COMAR)</th>
+                            <th class="text-end">WHT Rate</th>
+                            <th class="text-end">WHT Amount (COMAR)</th>
+                            <th class="text-end">Net Amount (COMAR)</th>
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for t in transactions %}
                         <tr data-type="{{ t.type }}">
+                            <td>{{ t.id }}</td>
                             <td class="text-nowrap">{{ t.date }}</td>
-
-                            <!-- PV NUMBER - NOW LINKS TO HTML VOUCHER (PRINT-FRIENDLY) -->
+                            <td>
+                                {% set months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] %}
+                                {% if t.month %}{{ months[t.month] }}{% else %}—{% endif %}
+                            </td>
                             <td class="text-nowrap">
-                                <a href="/voucher/html/{{ t.id }}"
-                                   target="_blank" rel="noopener noreferrer"
-                                   class="text-primary fw-bold text-decoration-underline"
-                                   title="View & Print Payment Voucher (HTML)">
-                                    {{ t.pv_number or ('PV-' ~ t.id|string) }}
-                                </a>
-                            </td>
-
-                            <!-- VENDOR + TIN -->
-                            <td>
-                                {{ t.vendor_name or '—' }}
-                                {% if t.vendor_tin %}
-                                    <br><small class="text-muted">TIN: {{ t.vendor_tin }}</small>
+                                {% if t.pv_number %}
+                                    <a href="/payment-voucher-content/{{ t.id }}" class="btn btn-sm btn-outline-primary" target="_blank" title="Print PV">
+                                        {{ t.pv_number }}
+                                    </a>
+                                {% else %}
+                                    —
                                 {% endif %}
                             </td>
-
-                            <!-- DESCRIPTION -->
-                            <td>{{ t.description or '—' }}</td>
-
-                            <!-- ACCOUNT (main + sub) -->
+                            <td>{{ t.vendor_tin or '—' }}</td>
                             <td>
-                                {{ t.main_account or '—' }}
-                                {% if t.main_account_code or t.sub_account %}
-                                    <br><small class="text-muted">
-                                        {{ t.main_account_code or '' }}
-                                        {% if t.sub_account_code %} • {{ t.sub_account_code }}{% endif %}
-                                    </small>
+                                {% if t.vendor_account_name or t.vendor_account_number %}
+                                    {{ t.vendor_account_name or '—' }}
+                                    {% if t.vendor_account_number %}
+                                        <br><small class="text-muted">{{ t.vendor_account_number }}</small>
+                                    {% endif %}
+                                {% else %}
+                                    —
                                 {% endif %}
                             </td>
-
-                            <!-- TYPE -->
+                            <td>{{ t.description }}</td>
+                            <td>{{ t.account_name }}</td>
+                            <td>{{ t.project or '—' }}</td>
                             <td>
-                                <span class="badge rounded-pill {{ 'bg-success' if t.type == 'Income' else 'bg-danger' }}">
+                                <span class="badge {% if t.type == 'Income' %}bg-success{% else %}bg-danger{% endif %}">
                                     {{ t.type }}
                                 </span>
                             </td>
-
-                            <!-- AMOUNTS -->
-                            <td class="text-end fw-bold amount-gross">
-                                {{ t.amount|format_currency }}
-                            </td>
-                            <td class="text-end amount-wht text-danger">
-                                {{ (t.WHT_amount or 0)|format_currency }}
-                            </td>
-                            <td class="text-end fw-bold amount-net">
-                                {{ (t.net_amount or (t.amount - (t.WHT_amount or 0)))|format_currency }}
-                            </td>
-
-                            <!-- ACTIONS -->
+                            <td class="text-end amount-gross">{{ "{:,.2f}".format(t.amount) }}</td>
+                            <td class="text-end">{{ (t.wht_rate * 100)|round(2) }}%</td>
+                            <td class="text-end">{{ "{:,.2f}".format(t.wht_amount) }}</td>
+                            <td class="text-end fw-bold amount-net">{{ "{:,.2f}".format(t.net_amount) }}</td>
                             <td class="text-center">
-                                <div class="btn-group btn-group-sm">
-                                    <a href="/edit-transaction/{{ t.id }}" class="btn btn-warning" title="Edit">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <form action="/delete-transaction/{{ t.id }}" method="post"
-                                          style="display:inline;" onsubmit="return confirm('Delete this transaction?');">
-                                        <button type="submit" class="btn btn-danger" title="Delete">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
-                                </div>
+                                <a href="/edit-transaction/{{ t.id }}" class="btn btn-sm btn-warning">Edit</a>
+                                <form method="post" action="/delete-transaction/{{ t.id }}" style="display:inline;" onsubmit="return confirm('Delete this transaction?');">
+                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                </form>
                             </td>
                         </tr>
                         {% endfor %}
@@ -140,6 +146,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('searchInput');
+    const vendorFilter = document.getElementById('vendorFilter');
     const rows = document.querySelectorAll('#transactionTable tbody tr');
 
     function calculateTotals() {
@@ -159,14 +166,25 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    searchInput.addEventListener('input', () => {
-        const filter = searchInput.value.toLowerCase().trim();
+    function filterRows() {
+        const query = searchInput.value.toLowerCase().trim();
+        const vendorValue = vendorFilter?.value.toLowerCase().trim() || '';
+
         rows.forEach(row => {
             const text = row.innerText.toLowerCase();
-            row.style.display = text.includes(filter) ? '' : 'none';
+            const matchesText = text.includes(query);
+            const matchesVendor = !vendorValue || text.includes(vendorValue);
+            row.style.display = matchesText && matchesVendor ? '' : 'none';
         });
         calculateTotals();
-    });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', filterRows);
+    }
+    if (vendorFilter) {
+        vendorFilter.addEventListener('change', filterRows);
+    }
 
     calculateTotals();
 });

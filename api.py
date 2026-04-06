@@ -20,21 +20,21 @@ templates = Jinja2Templates(directory="templates")
 # ---------------- DATABASE ----------------
 
 def get_db():
-conn = sqlite3.connect("ngo.db")
-conn.row_factory = sqlite3.Row
-return conn
+    conn = sqlite3.connect("ngo.db")
+    conn.row_factory = sqlite3.Row
+    return conn
 
 # ---------------- MODELS ----------------
 
 class Donation(BaseModel):
-date: str
-description: str
-amount: float
+    date: str
+    description: str
+    amount: float
 
 class Expense(BaseModel):
-date: str
-description: str
-amount: float
+    date: str
+    description: str
+    amount: float
 
 # ---------------- DASHBOARD ----------------
 

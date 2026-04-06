@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction Audit Log - UROMI NGO</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f4f6f9;
+            font-family: Arial, sans-serif;
+        }
+        .container-fluid {
+            margin-top: 30px;
+        }
+        .card {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border: none;
+            margin-bottom: 20px;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #198754 0%, #20c997 100%);
+            color: white;
+            font-weight: 700;
+        }
+        .table {
+            background: white;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .table thead th {
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+        }
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        .badge {
+            font-size: 0.75rem;
+        }
+        .filter-section {
+            background: white;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">📈 Transaction Audit Log</h2>
+            <small class="text-muted">Audit Role Access Only</small>
+        </div>
+        <div>
+            <a href="/audit" class="btn btn-outline-secondary">← Back to Audit Dashboard</a>
+            <a href="/logout" class="btn btn-outline-danger ms-2">Logout</a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-section">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label for="date_from" class="form-label">From Date</label>
+                <input type="date" class="form-control" id="date_from" name="date_from" value="{{ date_from }}">
+            </div>
+            <div class="col-md-3">
+                <label for="date_to" class="form-label">To Date</label>
+                <input type="date" class="form-control" id="date_to" name="date_to" value="{{ date_to }}">
+            </div>
+            <div class="col-md-3">
+                <label for="transaction_type" class="form-label">Transaction Type</label>
+                <select class="form-select" id="transaction_type" name="transaction_type">
+                    <option value="">All Types</option>
+                    <option value="income" {% if transaction_type == 'income' %}selected{% endif %}>Income</option>
+                    <option value="expense" {% if transaction_type == 'expense' %}selected{% endif %}>Expense</option>
+                    <option value="transfer" {% if transaction_type == 'transfer' %}selected{% endif %}>Transfer</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="user" class="form-label">User</label>
+                <select class="form-select" id="user" name="user">
+                    <option value="">All Users</option>
+                    {% for user in users %}
+                    <option value="{{ user.username }}" {% if selected_user == user.username %}selected{% endif %}>{{ user.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-success me-2">🔍 Filter</button>
+                <a href="/audit/transactions" class="btn btn-outline-secondary">Clear Filters</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Transaction Table -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Transaction Records ({{ transactions|length }} found)</h5>
+            <button class="btn btn-sm btn-outline-light" onclick="exportTransactions()">📄 Export</button>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Category</th>
+                            <th>User</th>
+                            <th>Created</th>
+                            <th>Updated</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for transaction in transactions %}
+                        <tr>
+                            <td>{{ transaction.id }}</td>
+                            <td>{{ transaction.date.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                {% if transaction.type == 'income' %}
+                                    <span class="badge bg-success">Income</span>
+                                {% elif transaction.type == 'expense' %}
+                                    <span class="badge bg-danger">Expense</span>
+                                {% else %}
+                                    <span class="badge bg-info">Transfer</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ transaction.description }}</td>
+                            <td class="fw-bold">
+                                {% if transaction.type == 'income' %}
+                                    <span class="text-success">+${{ "%.2f"|format(transaction.amount) }}</span>
+                                {% else %}
+                                    <span class="text-danger">-${{ "%.2f"|format(transaction.amount) }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ transaction.category }}</td>
+                            <td>{{ transaction.created_by }}</td>
+                            <td>{{ transaction.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                {% if transaction.updated_at %}
+                                    {{ transaction.updated_at.strftime('%Y-%m-%d %H:%M') }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewTransactionDetails({{ transaction.id }})">👁️ View</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if pages > 1 %}
+    <nav aria-label="Transaction pagination">
+        <ul class="pagination justify-content-center">
+            {% if current_page > 1 %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ current_page - 1 }}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if transaction_type %}&transaction_type={{ transaction_type }}{% endif %}{% if selected_user %}&user={{ selected_user }}{% endif %}">Previous</a>
+            </li>
+            {% endif %}
+
+            {% for page_num in range(max(1, current_page - 2), min(pages + 1, current_page + 3)) %}
+            <li class="page-item {% if page_num == current_page %}active{% endif %}">
+                <a class="page-link" href="?page={{ page_num }}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if transaction_type %}&transaction_type={{ transaction_type }}{% endif %}{% if selected_user %}&user={{ selected_user }}{% endif %}">{{ page_num }}</a>
+            </li>
+            {% endfor %}
+
+            {% if current_page < pages %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ current_page + 1 }}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if transaction_type %}&transaction_type={{ transaction_type }}{% endif %}{% if selected_user %}&user={{ selected_user }}{% endif %}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+</div>
+
+<!-- Transaction Details Modal -->
+<div class="modal fade" id="transactionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Transaction Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="transactionDetails">
+                <!-- Details will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function viewTransactionDetails(transactionId) {
+    // This would typically make an AJAX call to get transaction details
+    alert('Transaction details view for ID: ' + transactionId + ' (Feature coming soon)');
+}
+
+function exportTransactions() {
+    // This would typically trigger a CSV/PDF export
+    alert('Transaction export functionality will be available soon.');
+}
+</script>
+
+</body>
+</html>

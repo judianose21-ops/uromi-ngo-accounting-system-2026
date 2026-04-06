@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}Employee Salary Structure - UROMI NGO Accounting{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Salary Structure: {{ employee.first_name }} {{ employee.last_name }}</h2>
+        <div>
+            <a href="/employees" class="btn btn-secondary me-2">
+                <i class="fas fa-arrow-left"></i> Back to Employees
+            </a>
+            <a href="/edit-employee/{{ employee.employee_id }}" class="btn btn-outline-primary">
+                <i class="fas fa-edit"></i> Edit Employee
+            </a>
+        </div>
+    </div>
+
+    <!-- Employee Summary -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Employee Summary</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <strong>Employee ID:</strong> {{ employee.employee_id }}
+                </div>
+                <div class="col-md-3">
+                    <strong>Department:</strong> {{ employee.department or 'Not specified' }}
+                </div>
+                <div class="col-md-3">
+                    <strong>Position:</strong> {{ employee.position or 'Not specified' }}
+                </div>
+                <div class="col-md-3">
+                    <strong>Basic Salary:</strong> {{ "{:,.2f}".format(employee.basic_salary) | format_currency }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Current Salary Structure -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Current Salary Structure</h5>
+                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addComponentModal">
+                        <i class="fas fa-plus"></i> Add Component
+                    </button>
+                </div>
+                <div class="card-body">
+                    {% if salary_structure %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Component</th>
+                                        <th>Type</th>
+                                        <th>Amount</th>
+                                        <th>Effective Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for component in salary_structure %}
+                                    <tr>
+                                        <td>{{ component.component_name }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ 'success' if component.component_type == 'allowance' else 'danger' }}">
+                                                {{ component.component_type.title() }}
+                                            </span>
+                                        </td>
+                                        <td>{{ "{:,.2f}".format(component.amount) | format_currency }}</td>
+                                        <td>{{ component.effective_date }}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-danger"
+                                                    onclick="removeComponent({{ component.id }}, '{{ component.component_name }}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Salary Summary -->
+                        <div class="mt-4">
+                            <h6>Salary Summary</h6>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h6>Basic Salary</h6>
+                                            <h4 class="text-primary">{{ "{:,.2f}".format(employee.basic_salary) | format_currency }}</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-success text-white">
+                                        <div class="card-body text-center">
+                                            <h6>Total Allowances</h6>
+                                            <h4>{{ "{:,.2f}".format(salary_structure | selectattr('component_type', 'equalto', 'allowance') | sum(attribute='amount')) | format_currency }}</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-danger text-white">
+                                        <div class="card-body text-center">
+                                            <h6>Total Deductions</h6>
+                                            <h4>{{ "{:,.2f}".format(salary_structure | selectattr('component_type', 'equalto', 'deduction') | sum(attribute='amount')) | format_currency }}</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-info text-white">
+                                        <div class="card-body text-center">
+                                            <h6>Gross Salary</h6>
+                                            <h4>{{ "{:,.2f}".format(employee.basic_salary + (salary_structure | selectattr('component_type', 'equalto', 'allowance') | sum(attribute='amount'))) | format_currency }}</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-money-bill-wave fa-3x text-muted mb-3"></i>
+                            <h5>No Salary Components Assigned</h5>
+                            <p class="text-muted">Add allowances or deductions to customize this employee's salary structure.</p>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addComponentModal">
+                                <i class="fas fa-plus"></i> Add First Component
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Available Components -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Available Components</h5>
+                </div>
+                <div class="card-body">
+                    {% if available_components %}
+                        <div class="list-group">
+                            {% for component in available_components %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ component.component_name }}</strong>
+                                    <br>
+                                    <small class="text-muted">
+                                        {{ component.component_type.title() }}
+                                        {% if component.is_percentage %}
+                                            - {{ component.percentage_value }}%
+                                        {% else %}
+                                            - {{ "{:,.2f}".format(component.fixed_amount) | format_currency }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <button class="btn btn-sm btn-outline-primary"
+                                        onclick="quickAddComponent({{ component.id }}, '{{ component.component_name }}', {{ component.is_percentage | int }}, {{ component.percentage_value if component.percentage_value else 0 }}, {{ component.fixed_amount if component.fixed_amount else 0 }})">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">All available components have been assigned to this employee.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Component Modal -->
+<div class="modal fade" id="addComponentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Salary Component</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="/add-employee-salary-component">
+                <input type="hidden" name="employee_id" value="{{ employee.employee_id }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="component_id" class="form-label">Select Component</label>
+                        <select class="form-select" id="component_id" name="component_id" required>
+                            <option value="">Choose a component...</option>
+                            {% for component in available_components %}
+                            <option value="{{ component.id }}" data-percentage="{{ component.is_percentage | int }}" data-percentage-value="{{ component.percentage_value or 0 }}" data-fixed-amount="{{ component.fixed_amount or 0 }}">
+                                {{ component.component_name }} ({{ component.component_type.title() }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">Amount</label>
+                        <input type="number" class="form-control" id="amount" name="amount" step="0.01" min="0" required>
+                        <small class="text-muted" id="amount_help">Enter the amount for this component</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="effective_date" class="form-label">Effective Date</label>
+                        <input type="date" class="form-control" id="effective_date" name="effective_date" value="{{ 'now'|date:'Y-m-d' }}" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Component</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Update amount field based on selected component
+document.getElementById('component_id').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const isPercentage = selectedOption.getAttribute('data-percentage') === '1';
+    const percentageValue = parseFloat(selectedOption.getAttribute('data-percentage-value')) || 0;
+    const fixedAmount = parseFloat(selectedOption.getAttribute('data-fixed-amount')) || 0;
+    const amountField = document.getElementById('amount');
+    const amountHelp = document.getElementById('amount_help');
+
+    if (isPercentage) {
+        amountField.value = ({{ employee.basic_salary }} * percentageValue / 100).toFixed(2);
+        amountHelp.textContent = `Calculated as ${percentageValue}% of basic salary (₦{{ "{:,.2f}".format(employee.basic_salary) }})`;
+    } else {
+        amountField.value = fixedAmount.toFixed(2);
+        amountHelp.textContent = 'Fixed amount for this component';
+    }
+});
+
+function quickAddComponent(componentId, componentName, isPercentage, percentageValue, fixedAmount) {
+    // Auto-fill the modal
+    document.getElementById('component_id').value = componentId;
+
+    // Trigger change event to update amount
+    const event = new Event('change');
+    document.getElementById('component_id').dispatchEvent(event);
+
+    // Show modal
+    new bootstrap.Modal(document.getElementById('addComponentModal')).show();
+}
+
+function removeComponent(structureId, componentName) {
+    if (confirm(`Are you sure you want to remove "${componentName}" from this employee's salary structure?`)) {
+        fetch(`/remove-employee-salary-component/${structureId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `employee_id=${encodeURIComponent('{{ employee.employee_id }}')}`
+        }).then(() => {
+            location.reload();
+        });
+    }
+}
+</script>
+{% endblock %}

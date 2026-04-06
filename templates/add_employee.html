@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Add Employee - UROMI NGO Accounting{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Add New Employee</h2>
+        <a href="/employees" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Employees
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Employee Information</h5>
+                </div>
+                <div class="card-body">
+                    {% if error %}
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i> {{ error }}
+                        </div>
+                    {% endif %}
+
+                    <form method="post">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="employee_id" class="form-label">Employee ID *</label>
+                                <input type="text" class="form-control" id="employee_id" name="employee_id" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="employment_type" class="form-label">Employment Type</label>
+                                <select class="form-select" id="employment_type" name="employment_type">
+                                    <option value="full-time">Full Time</option>
+                                    <option value="part-time">Part Time</option>
+                                    <option value="contract">Contract</option>
+                                    <option value="intern">Intern</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name" class="form-label">First Name *</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name" class="form-label">Last Name *</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="phone" class="form-label">Phone</label>
+                                <input type="tel" class="form-control" id="phone" name="phone">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="date_of_birth" class="form-label">Date of Birth</label>
+                                <input type="date" class="form-control" id="date_of_birth" name="date_of_birth">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="hire_date" class="form-label">Hire Date *</label>
+                                <input type="date" class="form-control" id="hire_date" name="hire_date" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="department" class="form-label">Department</label>
+                                <input type="text" class="form-control" id="department" name="department">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="position" class="form-label">Position</label>
+                                <input type="text" class="form-control" id="position" name="position">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="basic_salary" class="form-label">Basic Salary (₦) *</label>
+                            <input type="number" class="form-control" id="basic_salary" name="basic_salary" step="0.01" min="0" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Address</label>
+                            <textarea class="form-control" id="address" name="address" rows="3"></textarea>
+                        </div>
+
+                        <h5 class="mt-4 mb-3">Banking Information</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="bank_name" class="form-label">Bank Name</label>
+                                <input type="text" class="form-control" id="bank_name" name="bank_name">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="bank_account_number" class="form-label">Account Number</label>
+                                <input type="text" class="form-control" id="bank_account_number" name="bank_account_number">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="bank_account_name" class="form-label">Account Name</label>
+                            <input type="text" class="form-control" id="bank_account_name" name="bank_account_name">
+                        </div>
+
+                        <h5 class="mt-4 mb-3">Additional Information</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="tax_id" class="form-label">Tax ID</label>
+                                <input type="text" class="form-control" id="tax_id" name="tax_id">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="pension_fund" class="form-label">Pension Fund</label>
+                                <input type="text" class="form-control" id="pension_fund" name="pension_fund">
+                            </div>
+                        </div>
+
+                        <h5 class="mt-4 mb-3">Emergency Contact</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="emergency_contact_name" class="form-label">Contact Name</label>
+                                <input type="text" class="form-control" id="emergency_contact_name" name="emergency_contact_name">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="emergency_contact_phone" class="form-label">Contact Phone</label>
+                                <input type="text" class="form-control" id="emergency_contact_phone" name="emergency_contact_phone">
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Employee
+                            </button>
+                            <a href="/employees" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Help & Tips</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Employee ID</h6>
+                    <p class="small text-muted">Use a unique identifier for each employee (e.g., EMP001, NGO-001).</p>
+
+                    <h6>Basic Salary</h6>
+                    <p class="small text-muted">Enter the monthly basic salary. Additional allowances and deductions can be configured separately.</p>
+
+                    <h6>Required Fields</h6>
+                    <p class="small text-muted">Fields marked with * are required. You can fill in other details later.</p>
+
+                    <h6>Banking Information</h6>
+                    <p class="small text-muted">Required for salary payments. Ensure account details are accurate.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

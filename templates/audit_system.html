@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Audit Log - UROMI NGO</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f4f6f9;
+            font-family: Arial, sans-serif;
+        }
+        .container-fluid {
+            margin-top: 30px;
+        }
+        .card {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border: none;
+            margin-bottom: 20px;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #198754 0%, #20c997 100%);
+            color: white;
+            font-weight: 700;
+        }
+        .table {
+            background: white;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .table thead th {
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+        }
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        .badge {
+            font-size: 0.75rem;
+        }
+        .filter-section {
+            background: white;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .metric-card {
+            text-align: center;
+            padding: 15px;
+        }
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #198754;
+        }
+        .metric-label {
+            color: #6c757d;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .log-entry {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+        }
+        .severity-info { color: #0d6efd; }
+        .severity-warning { color: #fd7e14; }
+        .severity-error { color: #dc3545; }
+        .severity-debug { color: #6c757d; }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">⚙️ System Audit Log</h2>
+            <small class="text-muted">Audit Role Access Only</small>
+        </div>
+        <div>
+            <a href="/audit" class="btn btn-outline-secondary">← Back to Audit Dashboard</a>
+            <a href="/logout" class="btn btn-outline-danger ms-2">Logout</a>
+        </div>
+    </div>
+
+    <!-- System Metrics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card metric-card">
+                <div class="metric-value">{{ total_logs }}</div>
+                <div class="metric-label">Total Log Entries</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card metric-card">
+                <div class="metric-value">{{ error_count }}</div>
+                <div class="metric-label">Error Events</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card metric-card">
+                <div class="metric-value">{{ warning_count }}</div>
+                <div class="metric-label">Warning Events</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card metric-card">
+                <div class="metric-value">{{ uptime_days }}</div>
+                <div class="metric-label">System Uptime (Days)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Database Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">📊 Database Statistics</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="metric-value">{{ db_size_mb }} MB</div>
+                            <div class="metric-label">Database Size</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="metric-value">{{ table_count }}</div>
+                            <div class="metric-label">Tables</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">🔄 Recent Activity</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="metric-value">{{ transactions_today }}</div>
+                            <div class="metric-label">Transactions Today</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="metric-value">{{ users_online }}</div>
+                            <div class="metric-label">Users Online</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-section">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label for="date_from" class="form-label">From Date</label>
+                <input type="date" class="form-control" id="date_from" name="date_from" value="{{ date_from }}">
+            </div>
+            <div class="col-md-3">
+                <label for="date_to" class="form-label">To Date</label>
+                <input type="date" class="form-control" id="date_to" name="date_to" value="{{ date_to }}">
+            </div>
+            <div class="col-md-3">
+                <label for="severity" class="form-label">Severity Level</label>
+                <select class="form-select" id="severity" name="severity">
+                    <option value="">All Levels</option>
+                    <option value="DEBUG" {% if severity == 'DEBUG' %}selected{% endif %}>Debug</option>
+                    <option value="INFO" {% if severity == 'INFO' %}selected{% endif %}>Info</option>
+                    <option value="WARNING" {% if severity == 'WARNING' %}selected{% endif %}>Warning</option>
+                    <option value="ERROR" {% if severity == 'ERROR' %}selected{% endif %}>Error</option>
+                    <option value="CRITICAL" {% if severity == 'CRITICAL' %}selected{% endif %}>Critical</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="component" class="form-label">Component</label>
+                <select class="form-select" id="component" name="component">
+                    <option value="">All Components</option>
+                    <option value="auth" {% if component == 'auth' %}selected{% endif %}>Authentication</option>
+                    <option value="database" {% if component == 'database' %}selected{% endif %}>Database</option>
+                    <option value="api" {% if component == 'api' %}selected{% endif %}>API</option>
+                    <option value="ui" {% if component == 'ui' %}selected{% endif %}>User Interface</option>
+                    <option value="system" {% if component == 'system' %}selected{% endif %}>System</option>
+                </select>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-success me-2">🔍 Filter</button>
+                <a href="/audit/system" class="btn btn-outline-secondary">Clear Filters</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- System Log Table -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">System Log Entries ({{ logs|length }} found)</h5>
+            <div>
+                <button class="btn btn-sm btn-outline-light me-2" onclick="refreshLogs()">🔄 Refresh</button>
+                <button class="btn btn-sm btn-outline-light" onclick="exportLogs()">📄 Export</button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Severity</th>
+                            <th>Component</th>
+                            <th>Message</th>
+                            <th>User</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr>
+                            <td class="log-entry">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td>
+                                <span class="badge bg-{% if log.severity == 'ERROR' or log.severity == 'CRITICAL' %}danger{% elif log.severity == 'WARNING' %}warning{% elif log.severity == 'INFO' %}info{% else %}secondary{% endif %}">
+                                    {{ log.severity }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark">{{ log.component }}</span>
+                            </td>
+                            <td class="log-entry severity-{{ log.severity.lower() }}">{{ log.message }}</td>
+                            <td>{{ log.user or 'System' }}</td>
+                            <td>
+                                {% if log.details %}
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewLogDetails('{{ log.details|e }}')">👁️ View</button>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if pages > 1 %}
+    <nav aria-label="Log pagination">
+        <ul class="pagination justify-content-center">
+            {% if current_page > 1 %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ current_page - 1 }}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if severity %}&severity={{ severity }}{% endif %}{% if component %}&component={{ component }}{% endif %}">Previous</a>
+            </li>
+            {% endif %}
+
+            {% for page_num in range(max(1, current_page - 2), min(pages + 1, current_page + 3)) %}
+            <li class="page-item {% if page_num == current_page %}active{% endif %}">
+                <a class="page-link" href="?page={{ page_num }}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if severity %}&severity={{ severity }}{% endif %}{% if component %}&component={{ component }}{% endif %}">{{ page_num }}</a>
+            </li>
+            {% endfor %}
+
+            {% if current_page < pages %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ current_page + 1 }}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if severity %}&severity={{ severity }}{% endif %}{% if component %}&component={{ component }}{% endif %}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+</div>
+
+<!-- Log Details Modal -->
+<div class="modal fade" id="logModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Log Entry Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <pre id="logDetails" style="white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 0.85rem;"></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function viewLogDetails(details) {
+    document.getElementById('logDetails').textContent = details;
+    new bootstrap.Modal(document.getElementById('logModal')).show();
+}
+
+function refreshLogs() {
+    window.location.reload();
+}
+
+function exportLogs() {
+    alert('Log export functionality will be available soon.');
+}
+</script>
+
+</body>
+</html>

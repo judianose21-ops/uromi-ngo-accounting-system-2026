@@ -2,7 +2,7 @@
 <html>
 
 <head>
-<title>UROMI NGO Accounting - Ledger</title>
+<title>CARE Initiative - Ledger</title>
 
 <style>
 
@@ -100,9 +100,22 @@ background:#f1f5f9;
 
 .balance{
 font-weight:bold;
+text-align:right;
 }
 
-/* PRINT STYLES */
+th, td {
+  padding:10px;
+  border-bottom:1px solid #ddd;
+}
+
+th:nth-child(5),
+th:nth-child(6),
+th:nth-child(7),
+td:nth-child(5),
+td:nth-child(6),
+td:nth-child(7) {
+  text-align:right;
+}
 
 @media print {
 
@@ -151,7 +164,7 @@ font-size:12px;
 <body>
 
 <div class="header">
-UROMI NGO Accounting – General Ledger
+CARE Initiative – General Ledger
 </div>
 
 <div class="container">
@@ -165,12 +178,12 @@ UROMI NGO Accounting – General Ledger
 <div class="report-header">
 
 <div class="logo">
-<img src="/static/logo.png" alt="UROMI NGO Logo">
+<img src="/static/logo.png" alt="CARE Initiative Logo">
 </div>
 
 <div class="report-title">
 <h2>GENERAL LEDGER</h2>
-<div>UROMI NGO – Financial Report</div>
+<div>CARE Initiative – Financial Report</div>
 </div>
 
 <div class="report-info">
@@ -187,24 +200,24 @@ Printed: <span id="printDate"></span>
 <th>Description</th>
 <th>Account</th>
 <th>Sub Account</th>
-<th>Debit</th>
-<th>Credit</th>
-<th>Balance</th>
+<th>Debit </th>
+<th>Credit </th>
+<th>Balance </th>
 </tr>
 </thead>
 
 <tbody>
 
-{% for l in ledger %}
+{% for l in transactions %}
 
 <tr>
 <td>{{l.date}}</td>
 <td>{{l.description}}</td>
-<td>{{l.account}}</td>
-<td>{{l.sub_account}}</td>
-<td>{{l.debit}}</td>
-<td>{{l.credit}}</td>
-<td class="balance">{{l.balance}}</td>
+<td>{{l.account_name}}</td>
+<td></td>
+<td>{% if l.type == 'Expense' or l.type == 'Debit' %}{{"{:,.2f}".format(l.amount)}}{% endif %}</td>
+<td>{% if l.type == 'Income' or l.type == 'Credit' %}{{"{:,.2f}".format(l.amount)}}{% endif %}</td>
+<td class="balance">{{"{:,.2f}".format(l.amount)}}</td>
 </tr>
 
 {% endfor %}
@@ -218,7 +231,7 @@ Printed: <span id="printDate"></span>
 </div>
 
 <footer>
-UROMI NGO Accounting System
+CARE Initiative
 </footer>
 
 <script>

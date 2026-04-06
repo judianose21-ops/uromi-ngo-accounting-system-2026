@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Print Budget - CARE Initiative</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: white;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        .print-header {
+            margin-bottom: 30px;
+        }
+        h2 {
+            font-size: 24px;
+            margin: 0 0 20px 0;
+            text-align: center;
+        }
+        .table {
+            font-size: 13px;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table th,
+        .table td {
+            border: 1px solid #000;
+            padding: 10px;
+            text-align: left;
+        }
+        .table thead th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        .table th.text-end,
+        .table td.text-end {
+            text-align: right;
+            font-family: monospace;
+        }
+        @media print {
+            body {
+                margin: 0;
+                padding: 0.5in;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="print-header">
+            <div style="display:flex; align-items:center; justify-content:flex-start; gap:16px; margin-bottom:16px;">
+                <img src="/static/logo.png" alt="CARE Initiative Logo" style="max-height:70px; object-fit:contain;">
+                <div style="text-align:left;">
+                    <div style="font-size:22px; font-weight:700;">CARE Initiative</div>
+                    <div style="font-size:14px; color:#666;">Budget </div>
+                </div>
+            </div>
+        </div>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Project</th>
+                    <th>Main Account</th>
+                    <th>Sub Account</th>
+                    <th>Detail</th>
+                    <th class="text-end">Qty</th>
+                    <th class="text-end">Unit Cost</th>
+                    <th class="text-end">Periods</th>
+                    <th class="text-end">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if budgets %}
+                    {% for b in budgets %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ b.project }}</td>
+                        <td>{{ b.account_code }} - {{ b.account_name }}</td>
+                        <td>{{ b.subaccount_code or '—' }}</td>
+                        <td>{{ b.detail }}</td>
+                        <td class="text-end">{{ b.quantity }}</td>
+                        <td class="text-end">{{ "{:,.2f}".format(b.unit_cost) }}</td>
+                        <td class="text-end">{{ b.periods }}</td>
+                        <td class="text-end">{{ "{:,.2f}".format(b.total) }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr><td colspan="9" style="text-align: center;">No budget data available.</td></tr>
+                {% endif %}
+            </tbody>
+            <tfoot>
+                <tr style="font-weight: bold;">
+                    <th colspan="8" style="text-align: right;">Grand Total</th>
+                    <th class="text-end">{{ grand_total | format_currency }}</th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    <script>
+        // Auto-print when page loads
+        window.addEventListener('load', function() {
+            // Small delay to ensure rendering
+            setTimeout(function() {
+                window.print();
+            }, 100);
+        });
+    </script>
+</body>
+</html>

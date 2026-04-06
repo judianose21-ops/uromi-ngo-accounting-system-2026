@@ -1,25 +1,74 @@
-<!-- templates/reports.html -->
 {% extends "base.html" %}
+{% block title %}Financial Reports{% endblock %}
 
 {% block content %}
-<h1>Reports</h1>
-<div class="row mt-3">
-    <div class="col-md-4">
-        <div class="card text-center p-3">
-            <h4>Income</h4>
-            <p class="display-6">${{ income }}</p>
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Financial Reports Hub</h1>
+        <a href="/dashboard" class="btn btn-outline-secondary">
+            ← Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Financial Statements Reports -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0 fw-semibold">📊 Financial Statements</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6 col-lg-4">
+                    <a href="/balance-sheet" class="btn btn-light border border-secondary w-100 py-3">
+                        <i class="bi bi-file-earmark-text me-2"></i> Balance Sheet
+                    </a>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <a href="/trial-balance" class="btn btn-light border border-secondary w-100 py-3">
+                        <i class="bi bi-list-check me-2"></i> Trial Balance
+                    </a>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <a href="/income-expenditure" class="btn btn-light border border-secondary w-100 py-3">
+                        <i class="bi bi-graph-up-arrow me-2"></i> Income & Expenditure
+                    </a>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <a href="/ledger-page" class="btn btn-light border border-secondary w-100 py-3">
+                        <i class="bi bi-journal-text me-2"></i> Ledger
+                    </a>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <a href="/bank-reconciliation" class="btn btn-light border border-secondary w-100 py-3">
+                        <i class="bi bi-bank me-2"></i> Bank Reconciliation
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card text-center p-3">
-            <h4>Expenses</h4>
-            <p class="display-6">${{ expenses }}</p>
+
+    <!-- Budget & Planning Reports -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0 fw-semibold">💰 Budget & Planning</h5>
         </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card text-center p-3">
-            <h4>Balance</h4>
-            <p class="display-6">${{ balance }}</p>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6 col-lg-4">
+                    <a href="/print-budget" class="btn btn-light border border-secondary w-100 py-3" target="_blank">
+                        <i class="bi bi-bar-chart-line me-2"></i> Print Budget
+                    </a>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <a href="/print-bva" class="btn btn-light border border-secondary w-100 py-3" target="_blank">
+                        <i class="bi bi-activity me-2"></i> Budget vs Actual (BVA)
+                    </a>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <a href="/generate-bva" class="btn btn-light border border-secondary w-100 py-3">
+                        <i class="bi bi-arrow-repeat me-2"></i> Generate BVA
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </div>

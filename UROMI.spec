@@ -6,7 +6,10 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[],
-    hiddenimports=[],
+    hiddenimports=[
+        'passlib.handlers.bcrypt',
+        'bcrypt'
+    ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

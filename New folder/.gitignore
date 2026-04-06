@@ -1,0 +1,14 @@
+.dart_tool/
+.packages
+.pub/
+build/
+ios/Flutter/Flutter.framework
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+*.lock
+*.log
+.DS_Store
+pubspec.lock

@@ -14,6 +14,7 @@ class TransactionsScreen extends StatefulWidget {
 
 class _TransactionsScreenState extends State<TransactionsScreen> {
   final ImagePicker _picker = ImagePicker();
+  final List<String> currencies = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD'];
 
   void _showAddTransactionDialog() {
     final formKey = GlobalKey<FormState>();
@@ -22,83 +23,104 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     final projectController = TextEditingController();
     final categoryController = TextEditingController();
     String? imagePath;
+    String selectedCurrency = 'USD';
 
     showDialog<void>(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Add Transaction'),
-          content: Form(
-            key: formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    controller: descriptionController,
-                    decoration: const InputDecoration(labelText: 'Description'),
-                    validator: (value) => value == null || value.isEmpty ? 'Enter description' : null,
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Add Transaction'),
+              content: Form(
+                key: formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextFormField(
+                        controller: descriptionController,
+                        decoration: const InputDecoration(labelText: 'Description'),
+                        validator: (value) => value == null || value.isEmpty ? 'Enter description' : null,
+                      ),
+                      TextFormField(
+                        controller: amountController,
+                        decoration: const InputDecoration(labelText: 'Amount'),
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) return 'Enter amount';
+                          final parsed = double.tryParse(value);
+                          return parsed == null ? 'Enter a valid number' : null;
+                        },
+                      ),
+                      DropdownButtonFormField<String>(
+                        value: selectedCurrency,
+                        decoration: const InputDecoration(labelText: 'Currency'),
+                        items: currencies.map((currency) {
+                          return DropdownMenuItem<String>(
+                            value: currency,
+                            child: Text(currency),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            selectedCurrency = value!;
+                          });
+                        },
+                      ),
+                      TextFormField(
+                        controller: categoryController,
+                        decoration: const InputDecoration(labelText: 'Category'),
+                        validator: (value) => value == null || value.isEmpty ? 'Enter category' : null,
+                      ),
+                      TextFormField(
+                        controller: projectController,
+                        decoration: const InputDecoration(labelText: 'Project'),
+                        validator: (value) => value == null || value.isEmpty ? 'Enter project name' : null,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: () async {
+                          final pickedFile = await _picker.pickImage(source: ImageSource.camera);
+                          if (pickedFile != null) {
+                            imagePath = pickedFile.path;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Image attached')),
+                            );
+                          }
+                        },
+                        icon: const Icon(Icons.camera),
+                        label: const Text('Attach Receipt'),
+                      ),
+                    ],
                   ),
-                  TextFormField(
-                    controller: amountController,
-                    decoration: const InputDecoration(labelText: 'Amount'),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return 'Enter amount';
-                      final parsed = double.tryParse(value);
-                      return parsed == null ? 'Enter a valid number' : null;
-                    },
-                  ),
-                  TextFormField(
-                    controller: categoryController,
-                    decoration: const InputDecoration(labelText: 'Category'),
-                    validator: (value) => value == null || value.isEmpty ? 'Enter category' : null,
-                  ),
-                  TextFormField(
-                    controller: projectController,
-                    decoration: const InputDecoration(labelText: 'Project'),
-                    validator: (value) => value == null || value.isEmpty ? 'Enter project name' : null,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: () async {
-                      final pickedFile = await _picker.pickImage(source: ImageSource.camera);
-                      if (pickedFile != null) {
-                        imagePath = pickedFile.path;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Image attached')),
-                        );
-                      }
-                    },
-                    icon: const Icon(Icons.camera),
-                    label: const Text('Attach Receipt'),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
-            ElevatedButton(
-              onPressed: () {
-                if (formKey.currentState!.validate()) {
-                  final amount = double.parse(amountController.text);
-                  final transaction = NGOTransaction(
-                    id: DateTime.now().microsecondsSinceEpoch.toString(),
-                    description: descriptionController.text,
-                    amount: amount,
-                    date: DateTime.now(),
-                    category: categoryController.text,
-                    project: projectController.text,
-                    imagePath: imagePath,
-                  );
-                  context.read<AppState>().addTransaction(transaction);
-                  Navigator.of(context).pop();
-                }
-              },
-              child: const Text('Save'),
-            ),
-          ],
+              actions: [
+                TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
+                ElevatedButton(
+                  onPressed: () {
+                    if (formKey.currentState!.validate()) {
+                      final amount = double.parse(amountController.text);
+                      final transaction = NGOTransaction(
+                        id: DateTime.now().microsecondsSinceEpoch.toString(),
+                        description: descriptionController.text,
+                        amount: amount,
+                        date: DateTime.now(),
+                        category: categoryController.text,
+                        project: projectController.text,
+                        imagePath: imagePath,
+                        currency: selectedCurrency,
+                      );
+                      context.read<AppState>().addTransaction(transaction);
+                      Navigator.of(context).pop();
+                    }
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
         );
       },
     );

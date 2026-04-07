@@ -2,3 +2,64 @@ venv
 __pycache__
 *.pyc
 .env
+
+# Python
+*.so
+.Python
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+build/
+build_*/
+dist/
+dist_*/
+*.manifest
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+UROMI.log
+
+# Build/test directories
+build-test/
+build-test2/
+build_debug/
+build_debug2/
+build_test/
+dist-test/
+dist-test2/
+dist_debug/
+dist_debug2/
+dist_test/
+
+# Flutter
+.flutter-plugins-dependencies
+.dart_tool/
+.flutter-plugins
+build/

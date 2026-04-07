@@ -5,6 +5,7 @@ class ProjectReport {
   final double progress;
   final double amountSpent;
   final DateTime updatedAt;
+  final String currency;
 
   ProjectReport({
     required this.id,
@@ -13,5 +14,6 @@ class ProjectReport {
     required this.progress,
     required this.amountSpent,
     required this.updatedAt,
+    this.currency = 'USD',
   });
 }

@@ -35,26 +35,14 @@ jobs:
         name: ngo-accounting-exe
         path: dist/UROMI.exe
 
-    - name: Create GitHub Release
+    - name: Create GitHub Release and upload EXE
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      uses: actions/create-release@v1
-      id: create_release
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: peter-evans/create-release@v5
       with:
+        token: ${{ secrets.GITHUB_TOKEN }}
         tag_name: v${{ github.run_number }}
         release_name: Release v${{ github.run_number }}
-        body: 'Automated build release for UROMI executable.'
+        body: Automated build release for UROMI executable.
         draft: false
         prerelease: false
-
-    - name: Upload release asset
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: dist/UROMI.exe
-        asset_name: UROMI.exe
-        asset_content_type: application/octet-stream
+        files: dist/UROMI.exe

@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 class NGOTransaction {
   final String id;
   final String description;
@@ -8,6 +6,7 @@ class NGOTransaction {
   final String category;
   final String project;
   final String? imagePath;
+  final String currency;
 
   NGOTransaction({
     required this.id,
@@ -17,5 +16,6 @@ class NGOTransaction {
     required this.category,
     required this.project,
     this.imagePath,
+    this.currency = 'USD',
   });
 }

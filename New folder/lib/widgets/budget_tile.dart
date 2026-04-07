@@ -20,7 +20,7 @@ class BudgetTile extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(budget.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                Text('\$${budget.spent.toStringAsFixed(0)} / ${budget.limit.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.w600)),
+                Text('${budget.currency} ${budget.spent.toStringAsFixed(0)} / ${budget.currency} ${budget.limit.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.w600)),
               ],
             ),
             const SizedBox(height: 12),

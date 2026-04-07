@@ -29,7 +29,7 @@ class ReportTile extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Spent: \$${report.amountSpent.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w600)),
+                Text('Spent: ${report.currency} ${report.amountSpent.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w600)),
                 Text(DateFormat.yMMMd().format(report.updatedAt), style: const TextStyle(color: Colors.black54, fontSize: 12)),
               ],
             ),

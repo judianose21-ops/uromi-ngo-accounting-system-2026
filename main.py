@@ -7,6 +7,19 @@ from pathlib import Path
 from typing import List, Optional
 from passlib.context import CryptContext
 import secrets
+import sys
+import os
+import socket
+import threading
+import logging
+import webbrowser
+
+if getattr(sys, 'frozen', False):
+    sys.stdout = open(os.devnull, 'w', encoding='utf-8', errors='ignore')
+    sys.stderr = open(os.devnull, 'w', encoding='utf-8', errors='ignore')
+    sys.stdin = open(os.devnull, 'r', encoding='utf-8', errors='ignore')
+
+import uvicorn
 from datetime import datetime, timedelta
 
 app = FastAPI(title="CARE Initiative")
@@ -92,10 +105,72 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 # ─── Configuration ───────────────────────────────────────────────────
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+if getattr(sys, 'frozen', False):
+    # Running in a PyInstaller bundle
+    bundle_dir = Path(sys._MEIPASS)
+    base_dir = Path(sys.executable).resolve().parent
+else:
+    bundle_dir = Path(__file__).resolve().parent
+    base_dir = bundle_dir
 
-# ─── Register custom Jinja filter (must be right after templates) ───
+log_file = base_dir / "UROMI.log"
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+file_handler = logging.FileHandler(str(log_file), encoding="utf-8")
+file_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
+logger.handlers = [file_handler]
+logger.info("Application starting. Frozen=%s base_dir=%s bundle_dir=%s", getattr(sys, 'frozen', False), base_dir, bundle_dir)
+
+UVICORN_LOG_CONFIG = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "default": {
+            "()": "logging.Formatter",
+            "fmt": "%(asctime)s %(levelname)s %(message)s",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+        "access": {
+            "()": "logging.Formatter",
+            "fmt": "%(asctime)s %(levelname)s %(message)s",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+    },
+    "handlers": {
+        "default": {
+            "class": "logging.StreamHandler",
+            "formatter": "default",
+            "stream": "ext://sys.stderr",
+        },
+        "access": {
+            "class": "logging.StreamHandler",
+            "formatter": "access",
+            "stream": "ext://sys.stdout",
+        },
+    },
+    "loggers": {
+        "uvicorn": {"handlers": ["default"], "level": "INFO", "propagate": False},
+        "uvicorn.error": {"handlers": ["default"], "level": "INFO", "propagate": False},
+        "uvicorn.access": {"handlers": ["access"], "level": "INFO", "propagate": False},
+    },
+}
+
+static_dir = bundle_dir / "static"
+template_dir = bundle_dir / "templates"
+
+# Ensure required directories exist when running from a bundle or source tree.
+if not static_dir.exists():
+    logger.warning("Static directory missing at %s, creating it.", static_dir)
+    static_dir.mkdir(parents=True, exist_ok=True)
+
+if not template_dir.exists():
+    logger.warning("Template directory missing at %s, creating it.", template_dir)
+    template_dir.mkdir(parents=True, exist_ok=True)
+
+app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+templates = Jinja2Templates(directory=str(template_dir))
+
+# ─── Register custom Jinja filter (must be right after templates) ──
 def format_currency(value):
     try:
         return f"₦{float(value):,.2f}"
@@ -179,7 +254,16 @@ def init_db() -> None:
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
-            role TEXT
+            role TEXT,
+            email TEXT UNIQUE,
+            last_password_change TEXT,
+            password_reset_token TEXT,
+            reset_token_expiry TEXT,
+            failed_login_attempts INTEGER DEFAULT 0,
+            locked_until TEXT,
+            is_active INTEGER DEFAULT 1,
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now'))
         )
         """)
 
@@ -4778,3 +4862,47 @@ async def payroll_reports(request: Request):
     })
 
 # ─── END PAYROLL MANAGEMENT ROUTES ──────────────────────────────────
+
+def get_available_port(preferred_port: int = 8000, max_port: int = 8100) -> int:
+    """Choose an available localhost port, falling back from the preferred port."""
+    for port in range(preferred_port, max_port + 1):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            try:
+                sock.bind(("127.0.0.1", port))
+                return port
+            except OSError:
+                continue
+    raise RuntimeError(f"No free ports available between {preferred_port} and {max_port}")
+
+
+if __name__ == "__main__":
+    preferred_port = int(os.getenv("PORT", 8000))
+    port = get_available_port(preferred_port)
+    if port != preferred_port:
+        msg = f"Port {preferred_port} is busy. Starting on port {port} instead."
+        print(msg)
+        logging.info(msg)
+    else:
+        logging.info("Using port %s", port)
+
+    url = f"http://127.0.0.1:{port}/dashboard"
+    try:
+        threading.Timer(2.0, lambda: webbrowser.open(url)).start()
+    except Exception as e:
+        msg = f"Could not open browser automatically: {e}"
+        print(msg)
+        logging.warning(msg)
+
+    try:
+        uvicorn.run(
+            app,
+            host="127.0.0.1",
+            port=port,
+            log_level="info",
+            access_log=False,
+            use_colors=False,
+            log_config=UVICORN_LOG_CONFIG,
+        )
+    except Exception as e:
+        logging.exception("Failed to start Uvicorn")
+        raise

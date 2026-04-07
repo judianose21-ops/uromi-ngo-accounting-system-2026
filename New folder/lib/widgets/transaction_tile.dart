@@ -23,7 +23,7 @@ class TransactionTile extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('\$${transaction.amount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text('${transaction.currency} ${transaction.amount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
             Text(dateLabel, style: const TextStyle(fontSize: 12, color: Colors.black54)),
           ],
